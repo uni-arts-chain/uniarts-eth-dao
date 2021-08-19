@@ -20,6 +20,7 @@ contract UniArtsNFT is ERC721, AccessControl {
   constructor(address minter) public ERC721("UniArtsNFT", "UANFT") {
     // Grant the minter role to a specified account
     _setupRole(MINTER_ROLE, minter);
+    _setupRole(DEFAULT_ADMIN_ROLE, minter);
   }
   
   function createNFT(address user_address, string calldata title, uint8 class_id, uint8 size) external {
