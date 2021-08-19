@@ -8,7 +8,7 @@ import "./UniartsNFTInterface.sol";
 
 /**
  * @title A small marketplace allowing users to buy and sell a specific ERC721 token
- * @dev For this example, we are using a fictional token called BitflixNFT
+ * @dev For this example, we are using a fictional token called UniartsNFT
  * @author Pickle Solutions https://github.com/picklesolutions
  */
 contract ResellMarketplace is Ownable {
@@ -18,7 +18,7 @@ contract ResellMarketplace is Ownable {
   event ItemBought(uint offerId);
 
   /* The address of our ERC721 token contract */
-  address public bitfilxNFTContractAddress = address(0);
+  address public uniartsNFTContractAddress = address(0);
 
   /* The address of Pay erc20 token contract */
   string public payCoinSymbol;
@@ -58,17 +58,17 @@ contract ResellMarketplace is Ownable {
     uint price
   ) external whenMarketIsOpen() {
     /* Let's talk to our token contract */
-    BitflixNFTInterface bitfilxNFT = BitflixNFTInterface(bitfilxNFTContractAddress);
+    UniartsNFTInterface uniartsNFT = UniartsNFTInterface(uniartsNFTContractAddress);
 
     /* We need to be sure that the sender is the actual owner of the token */
     require(
-      bitfilxNFT.ownerOf(itemId) == msg.sender,
+      uniartsNFT.ownerOf(itemId) == msg.sender,
       "Sender does not own this item"
     );
 
     /* Are we approved to manage this item? */
     require(
-      bitfilxNFT.getApproved(itemId) == address(this),
+      uniartsNFT.getApproved(itemId) == address(this),
       "We do not have approval to manage this item"
     );
 
@@ -115,13 +115,13 @@ contract ResellMarketplace is Ownable {
     uint offerId
   ) external whenMarketIsOpen() {
     /* Let's talk to our token contract */
-    BitflixNFTInterface bitfilxNFT = BitflixNFTInterface(bitfilxNFTContractAddress);
+    UniartsNFTInterface uniartsNFT = UniartsNFTInterface(uniartsNFTContractAddress);
 
     IERC20 payCoin = IERC20(payCoinContractAddress);
 
     /* Are we still able to manage this item? */
     require(
-      bitfilxNFT.getApproved(offers[offerId].itemId) == address(this),
+      uniartsNFT.getApproved(offers[offerId].itemId) == address(this),
       "We do not have approval to manage this item"
     );
 
@@ -140,7 +140,7 @@ contract ResellMarketplace is Ownable {
     offers[offerId].buyer = payable(msg.sender);
 
     /* We transfer the item from the seller to the buyer */
-    bitfilxNFT.safeTransferFrom(
+    uniartsNFT.safeTransferFrom(
       offers[offerId].seller,
       offers[offerId].buyer,
       offers[offerId].itemId
@@ -167,16 +167,16 @@ contract ResellMarketplace is Ownable {
 
   /**
    * @dev Sets the address of our ERC721 token contract
-   * @param newBitflixNFTContractAddress The address of the contract
+   * @param newUniartsNFTContractAddress The address of the contract
    */
-  function setBitflixNFTContractAddress(
-    address newBitflixNFTContractAddress
+  function setUniartsNFTContractAddress(
+    address newUniartsNFTContractAddress
   ) external onlyOwner() {
     /* The address cannot be null */
-    require(newBitflixNFTContractAddress != address(0), "Contract address cannot be null");
+    require(newUniartsNFTContractAddress != address(0), "Contract address cannot be null");
 
     /* We set the address */
-    bitfilxNFTContractAddress = newBitflixNFTContractAddress;
+    uniartsNFTContractAddress = newUniartsNFTContractAddress;
   }
 
   /**
@@ -199,7 +199,7 @@ contract ResellMarketplace is Ownable {
    * @dev Opens the market if the contract address is correct
    */
   function openMarketplace() external onlyOwner() {
-    require(bitfilxNFTContractAddress != address(0), "Contract address is not set");
+    require(uniartsNFTContractAddress != address(0), "Contract address is not set");
     require(payCoinContractAddress != address(0), "Pay Coin Contract address is not set");
 
     isMarketPlaceOpen = true;

@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 /**
  * @title Interface for our ERC721 token
  */
-interface BitflixNFTInterface {
+interface UniartsNFTInterface {
   /* Our custom functions go here */
 
   /**
