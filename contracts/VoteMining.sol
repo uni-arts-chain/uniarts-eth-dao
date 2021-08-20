@@ -12,6 +12,10 @@ interface ITreasury {
 	function uink() external view returns(address);
 }
 
+interface IAuction {
+	function matchResults(string calldata matchId, uint index) external view returns(address, uint);
+}
+
 contract VoteMining is Ownable {
 	using SafeMath for uint256;
 
@@ -25,6 +29,7 @@ contract VoteMining is Ownable {
 
 	address public uink;
 	ITreasury public treasury;
+	address public auction;
 
 	struct NFT {
 		uint uid;
@@ -35,6 +40,12 @@ contract VoteMining is Ownable {
 	// id => start time
 	mapping (uint => uint) public groups;
 	uint public currentGroupId = 0;
+	// group id => matchId
+	mapping (uint => string) public matches;
+	// group id => finished or not
+	mapping (uint => bool) public hasFinished;
+	
+	
 
 	
 	// id => NFT[]
@@ -89,28 +100,30 @@ contract VoteMining is Ownable {
 		_; 
 	}
 
-	modifier onlyOperator() {
-		require(operators[msg.sender], "Not operator");
-		_;
-	}
 	
-	constructor(address _treasury){
+	
+	constructor(address _treasury, address _auction){
 		treasury = ITreasury(_treasury);
+		auction = _auction;
 		uink = treasury.uink();
 	}
-
-	function addOperator(address _operator) external onlyOwner {
-		operators[_operator] = true;
-	}
+	// modifier onlyOperator() {
+	// 	require(operators[msg.sender], "Not operator");
+	// 	_;
+	// }
+	// function addOperator(address _operator) external onlyOwner {
+	// 	operators[_operator] = true;
+	// }
 	
-	function removeOperator(address _operator) external onlyOwner {
-		operators[_operator] = false;
-	}
+	// function removeOperator(address _operator) external onlyOwner {
+	// 	operators[_operator] = false;
+	// }
 
-	function addGroup(uint stakingBase, uint startTime) external onlyOwner {
+	function addGroup(uint stakingBase, uint startTime, string calldata matchId) external onlyOwner {
 		currentGroupId++;
 		groups[currentGroupId] = startTime;
 		stakingBases[currentGroupId] = stakingBase;
+		matches[currentGroupId] = matchId;
 	}
 
 	function addNFT(uint groupId, address[] calldata nftAddrs, uint[] calldata nftIds) external onlyOwner {
@@ -129,11 +142,16 @@ contract VoteMining is Ownable {
 			}));
 		}
 	}
-	
-	function setNFTTradedPrice(address nftAddr, uint nftId, uint price) external onlyOwner {
-		uint uid = nfts[nftAddr][nftId];
-		nftTradedPrices[uid] = price;
+
+	function getAuctionPrices(uint groupId) public view returns(uint[] memory prices, uint totalAmount) {
+		prices = new uint[](groupNFTs[groupId].length);
+		for(uint i = 0; i < groupNFTs[groupId].length; i++) {
+			(, uint price) = IAuction(auction).matchResults(matches[groupId], i);
+			prices[i] = price;
+			totalAmount = totalAmount.add(price);
+		}
 	}
+
 	
 	function getDate(uint256 ts) public pure returns(uint256) {
 		return ts.sub(ts.mod(1 days));
@@ -325,6 +343,7 @@ contract VoteMining is Ownable {
 	}
 
 	function claimBonusRewards(uint groupId) external {
+		require(hasFinished[groupId], "Acution is not over");
 		require(!bonusRewardsClaimed[msg.sender][groupId], "Claimed");
 		uint[] memory rewardRates = getBonusRewardRates(groupId);
 		uint rewards = 0;
@@ -342,16 +361,18 @@ contract VoteMining is Ownable {
 	function getTradeWeights(uint groupId) public view returns(uint[] memory weights) {
 		NFT[] memory gNFTs = groupNFTs[groupId];
 		weights = new uint[](gNFTs.length);
-		uint total = 0;
-		for(uint i = 0; i < gNFTs.length; i++){
-			total = total.add(nftTradedPrices[gNFTs[i].uid]);
-		}
+		
+		(uint[] memory prices, uint total) = getAuctionPrices(groupId);
 
 		if(total > 0) {
 			for(uint i = 0; i < gNFTs.length; i++){
-				weights[i] = nftTradedPrices[gNFTs[i].uid].mul(1e18).div(total);
+				weights[i] = prices[i].mul(1e18).div(total);
 			}
 		}
+	}
+
+	function setAuctionFinish(uint groupId) external onlyOwner {
+		hasFinished[groupId] = true;
 	}
 
 	function getBonusRewardRates(uint groupId) public view returns(uint[] memory bonusRewardRates) {
