@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "./interfaces/IERC721Verifiable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./interfaces/ITrustMarketplace.sol";
 import "./FeeManager.sol";
 
@@ -153,13 +153,11 @@ contract TrustMarketplace is Ownable, Pausable, FeeManager, ITrustMarketplace, E
      * @param _nftAddress - Address of the NFT registry
      * @param _assetId - ID of the published NFT
      * @param _priceInWei - Order price
-     * @param _fingerprint - Verification info for the asset
      */
     function safeExecuteOrder(
         address _nftAddress,
         uint256 _assetId,
-        uint256 _priceInWei,
-        bytes32 _fingerprint
+        uint256 _priceInWei
     )
         public whenNotPaused
     {
@@ -172,13 +170,6 @@ contract TrustMarketplace is Ownable, Pausable, FeeManager, ITrustMarketplace, E
         /// Check the execution price matches the order price
         require(order.price == _priceInWei, "Marketplace: invalid price");
         require(order.seller != msg.sender, "Marketplace: unauthorized sender");
-
-        // Check the asset fingerprint
-        _verifyAssetFingerprint(
-            IERC721Verifiable(_nftAddress),
-            _assetId,
-            _fingerprint
-        );
 
         // market fee to cut
         uint256 saleShareAmount = 0;
@@ -234,23 +225,15 @@ contract TrustMarketplace is Ownable, Pausable, FeeManager, ITrustMarketplace, E
      * @param _assetId - ID of the published NFT
      * @param _priceInWei - Bid price in acceptedToken currency
      * @param _expiresAt - Bid expiration time
-     * @param _fingerprint - Verification info for the asset
      */
     function safePlaceBid(
         address _nftAddress,
         uint256 _assetId,
         uint256 _priceInWei,
-        uint256 _expiresAt,
-        bytes32 _fingerprint
+        uint256 _expiresAt
     )
         public whenNotPaused
     {
-        _verifyAssetFingerprint(
-            IERC721Verifiable(_nftAddress),
-            _assetId,
-            _fingerprint
-        );
-
         _createBid(
             _nftAddress,
             _assetId,
@@ -620,19 +603,5 @@ contract TrustMarketplace is Ownable, Pausable, FeeManager, ITrustMarketplace, E
             "The NFT contract has an invalid ERC721 implementation"
         );
         return IERC721(_nftAddress);
-    }
-
-
-    function _verifyAssetFingerprint(
-        IERC721Verifiable _nftRegistry,
-        uint256 _assetId,
-        bytes32 _fingerprint
-    )
-        internal view
-    {
-        require(
-            _nftRegistry.verifyFingerprint(_assetId, _fingerprint),
-            "Marketplace: asset fingerprint is not valid"
-        );
     }
 }
