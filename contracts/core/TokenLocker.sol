@@ -108,7 +108,7 @@ contract TokenLocker is Ownable {
     // Make sure lock is still locked
     require(locks[msg.sender][lockId].retrieved == false, "Lock was already unlocked");
 
-    TokenLock memory tokenLock;
+    TokenLock storage tokenLock = locks[newOwner][numLocks[newOwner]];
     tokenLock.tokenAddress = locks[msg.sender][lockId].tokenAddress;
     tokenLock.lockDate = locks[msg.sender][lockId].lockDate;
     tokenLock.amount = locks[msg.sender][lockId].amount;
@@ -117,7 +117,7 @@ contract TokenLocker is Ownable {
     tokenLock.owner = newOwner;
     tokenLock.retrieved = false;
 
-    locks[newOwner][numLocks[newOwner]] = tokenLock;
+
     numLocks[newOwner]++;
 
     // If lock ownership is transferred its retrieved
@@ -129,7 +129,7 @@ contract TokenLocker is Ownable {
     // Make sure lock exists
     require(lockId < numLocks[accountAddress], "Lock doesn't exist");
 
-    TokenLock memory tokenLock = locks[accountAddress][lockId];
+    TokenLock storage tokenLock = locks[accountAddress][lockId];
     // Make sure lock is still locked
     require(tokenLock.retrieved == false, "Lock was already unlocked");
     // Make sure tokens can be unlocked
@@ -145,7 +145,7 @@ contract TokenLocker is Ownable {
   }
 
   function _setLockTokens(address tokenAddress, address account, uint256 amount, uint256 time) internal returns (bool) {
-    TokenLock memory tokenLock;
+    TokenLock storage tokenLock = locks[account][numLocks[account]];
     tokenLock.tokenAddress = tokenAddress;
     tokenLock.lockDate = block.timestamp;
     tokenLock.amount = amount;

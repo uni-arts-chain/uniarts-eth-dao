@@ -16,6 +16,11 @@ interface IAuction {
 	function matchResults(string calldata matchId, uint index) external view returns(address, uint);
 }
 
+interface ITokenLocker {
+	function subLockForVote(uint256 lockId, address accountAddress) external returns(uint);
+}
+
+
 contract VoteMining is Ownable {
 	using SafeMath for uint256;
 
@@ -48,14 +53,14 @@ contract VoteMining is Ownable {
 	
 
 	
-	// id => NFT[]
+	// group id => NFT[]
 	mapping (uint => NFT[]) groupNFTs;
 	// date => NFT uid => votes
 	mapping (uint => mapping (uint => uint)) dayVotes;
 	// user => date => NFT id => amount
 	mapping (address => mapping (uint => mapping (uint => uint))) userVotes;
 		
-	// address => nftId => internal id
+	// nft address => nftId => internal id
 	mapping (address => mapping (uint => uint)) nfts;
 	uint public nextNFTId = 0;
 	// group id => votes
@@ -63,6 +68,10 @@ contract VoteMining is Ownable {
 
 	// uid => votes
 	mapping (uint => uint) public nftVotes;
+
+	// uid => group id
+	mapping (uint => uint) public nftGroup;
+	
 	
 	
 	struct VoteBalance {
@@ -82,17 +91,29 @@ contract VoteMining is Ownable {
 	mapping (address => mapping (uint => mapping (uint => bool))) public voteRewardsClaimed;
 	// user = > group id => bool
 	mapping (address => mapping (uint => bool)) public bonusRewardsClaimed;
-	// user => group id => bool
-	mapping (address => mapping (uint => bool)) public mintRewardsClaimed;
+	// nft uid => bool
+	mapping (uint => bool) public mintRewardsClaimed;
 	
 
 	mapping (address => bool) public operators;
+
+	address public pinAddress;
+
+	uint public tokenLockId = 0;
+
+	address public tokenLocker;
 	
 
 	modifier checkNFT(address nftAddr, uint nftId) { 
 		require(nfts[nftAddr][nftId] > 0, "Invalid NFT");
 		_; 
 	}
+
+	modifier onlyPin() { 
+		require(msg.sender == pinAddress, "Forbidden"); 
+		_; 
+	}
+	
 
 	modifier checkVotingTime() { 
 		require(groups[currentGroupId] <= block.timestamp, "Voting is not start");
@@ -102,10 +123,11 @@ contract VoteMining is Ownable {
 
 	
 	
-	constructor(address _treasury, address _auction){
+	constructor(address _treasury, address _auction, address _tokenLocker){
 		treasury = ITreasury(_treasury);
 		auction = _auction;
 		uink = treasury.uink();
+		tokenLocker = _tokenLocker;
 	}
 	// modifier onlyOperator() {
 	// 	require(operators[msg.sender], "Not operator");
@@ -118,6 +140,14 @@ contract VoteMining is Ownable {
 	// function removeOperator(address _operator) external onlyOwner {
 	// 	operators[_operator] = false;
 	// }
+
+	function setPinAddress(address _pin) external onlyOwner {
+		pinAddress = _pin;
+	}
+
+	function setTokenLockId(uint lockId) external onlyOwner {
+		tokenLockId = lockId;
+	}
 
 	function addGroup(uint stakingBase, uint startTime, string calldata matchId) external onlyOwner {
 		currentGroupId++;
@@ -140,6 +170,7 @@ contract VoteMining is Ownable {
 				id: nftIds[i],
 				owner: nftOwner
 			}));
+			nftGroup[nextNFTId] = groupId;
 		}
 	}
 
@@ -222,6 +253,24 @@ contract VoteMining is Ownable {
 		}
 		nftVotes[uid] = nftVotes[uid].add(amount);
 		groupVotes[currentGroupId] = groupVotes[currentGroupId].add(amount);
+	}
+
+	function stakeFromLock(address nftAddr, uint nftId) 
+		external 
+		checkVotingTime
+		checkNFT(nftAddr, nftId) 
+	{
+
+		uint amount = ITokenLocker(tokenLocker).subLockForVote(tokenLockId, msg.sender);
+		_vote(msg.sender, nftAddr, nftId, amount);
+
+		balances[msg.sender] = balances[msg.sender].add(amount);
+
+		VoteBalance storage nvBalance = nextVotableBalances[msg.sender][currentGroupId];
+		nvBalance.balance = nvBalance.balance.add(amount);
+		if(nvBalance.releaseAt == 0) {
+			nvBalance.releaseAt = groups[currentGroupId].add(14 days); 
+		}
 	}
 
 	// stake and vote
@@ -327,18 +376,36 @@ contract VoteMining is Ownable {
 	}
 
 
-	function claimMintRewards(uint groupId) external {
-		require(!mintRewardsClaimed[msg.sender][groupId], "Claimed");
-		require(groupId <= currentGroupId && groups[groupId] > 0, "Invalid group ID");
-		require(groups[groupId] + 7 days < block.timestamp, "Voting is not finished");
+	// function claimMintRewards(uint groupId) external {
+	// 	require(!mintRewardsClaimed[msg.sender][groupId], "Claimed");
+	// 	require(groupId <= currentGroupId && groups[groupId] > 0, "Invalid group ID");
+	// 	require(groups[groupId] + 7 days < block.timestamp, "Voting is not finished");
+	// 	uint rewards = 0;
+	// 	for(uint i = 0; i < groupNFTs[groupId].length; i++) {
+	// 		if(groupNFTs[groupId][i].owner == msg.sender) {
+	// 			rewards = rewards.add(getMintRewardsPerNFT(groupId)[i]);
+	// 		}
+	// 	}
+	// 	if(rewards > 0) {
+	// 		treasury.sendRewards(msg.sender, rewards);
+	// 	}
+	// }
+
+	function claimMintRewards(address nftAddr, uint nftId) external onlyPin {
+		uint uid = nfts[nftAddr][nftId];
+		uint groupId = nftGroup[nfts[nftAddr][nftId]];
+		require(!mintRewardsClaimed[uid], "Claimed");
+
 		uint rewards = 0;
 		for(uint i = 0; i < groupNFTs[groupId].length; i++) {
-			if(groupNFTs[groupId][i].owner == msg.sender) {
-				rewards = rewards.add(getMintRewardsPerNFT(groupId)[i]);
+			if(groupNFTs[groupId][i].uid == uid) {
+				rewards = getMintRewardsPerNFT(groupId)[i];
+				break;
 			}
 		}
 		if(rewards > 0) {
 			treasury.sendRewards(msg.sender, rewards);
+			mintRewardsClaimed[uid] = true;
 		}
 	}
 
