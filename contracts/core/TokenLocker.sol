@@ -11,7 +11,7 @@ contract TokenLocker is Ownable {
   
   TokenLockerStorage tokenLockerStorage;
 
-  address voteContractAddress;
+  address voteAddress;
   
   struct TokenLock {
     address tokenAddress;
@@ -31,6 +31,11 @@ contract TokenLocker is Ownable {
   // Num of locks for each user
   mapping(address => uint256) public numLocks;
 
+  modifier onlyVoter() {
+     require(voteAddress == msg.sender, "Ownable: caller is not the vote contract");
+     _;
+  }
+
   constructor(address _tokenLockerStorageAddress) {
     tokenLockerStorage = TokenLockerStorage(_tokenLockerStorageAddress);
     // Init airdrop tokens
@@ -49,6 +54,11 @@ contract TokenLocker is Ownable {
   // all functions will read and write data to this contract
   function setTokenLockerStorageContract(address _tokenLockerStorageAddress) public onlyOwner {
       tokenLockerStorage = TokenLockerStorage(_tokenLockerStorageAddress);  
+  }
+
+  function setVoteContractAddress(address newAddress) public virtual onlyOwner {
+        require(newAddress != address(0), "new address is the zero address");
+        voteAddress = newAddress;
   }
 
   function lockTokens(address tokenAddress, uint256 amount, uint256 time) external returns (bool) {
