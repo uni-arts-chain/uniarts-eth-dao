@@ -11,7 +11,7 @@ contract TokenLocker is Ownable {
   
   TokenLockerStorage tokenLockerStorage;
 
-  address voteAddress;
+  address voteAddress = address(0);
   
   struct TokenLock {
     address tokenAddress;
@@ -24,6 +24,7 @@ contract TokenLocker is Ownable {
   }
 
   event LockTokenAdd(address tokenAddress, address accountAddress, uint256 amount);
+  event LockTokenVote(address tokenAddress, address accountAddress, uint256 amount);
 
   // Mapping of user to their locks
   mapping(address => mapping(uint256 => TokenLock)) public locks;
@@ -122,6 +123,25 @@ contract TokenLocker is Ownable {
     // If lock ownership is transferred its retrieved
     locks[msg.sender][lockId].retrieved = true;
     return true;
+  }
+
+  function subLockForVote(uint256 lockId, address accountAddress) external onlyVoter returns (uint256 amount) {
+    // Make sure lock exists
+    require(lockId < numLocks[accountAddress], "Lock doesn't exist");
+
+    TokenLock memory tokenLock = locks[accountAddress][lockId];
+    // Make sure lock is still locked
+    require(tokenLock.retrieved == false, "Lock was already unlocked");
+    // Make sure tokens can be unlocked
+    require(tokenLock.unlockDate <= block.timestamp, "Tokens can't be unlocked yet");
+    
+    IERC20 token = IERC20(tokenLock.tokenAddress);
+    token.transfer(msg.sender, tokenLock.amount);
+    tokenLock.retrieved = true;
+
+    emit LockTokenVote(tokenLock.tokenAddress, accountAddress, tokenLock.amount);
+
+    return tokenLock.amount;
   }
 
   function _setLockTokens(address tokenAddress, address account, uint256 amount, uint256 time) internal returns (bool) {
