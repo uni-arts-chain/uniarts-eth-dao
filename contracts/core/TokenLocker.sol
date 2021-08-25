@@ -3,9 +3,12 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./TokenLockerStorage.sol";
 
 contract TokenLocker {
   using SafeMath for uint256;
+  
+  TokenLockerStorage tokenLockerStorage;
   
   address owner;
   
@@ -19,14 +22,27 @@ contract TokenLocker {
     bool retrieved; // false if lock already retreieved
   }
 
+  event LockTokenAdd(address tokenAddress, address accountAddress, uint256 amount);
+
   // Mapping of user to their locks
   mapping(address => mapping(uint256 => TokenLock)) public locks;
 
   // Num of locks for each user
   mapping(address => uint256) public numLocks;
 
-  constructor() {
+  constructor(address _tokenLockerStorageAddress) {
+    tokenLockerStorage = TokenLockerStorage(_tokenLockerStorageAddress);
     owner = msg.sender;
+    // Init airdrop tokens
+    for (uint i=0; i<tokenLockerStorage.getAccountCount(); i++) {
+      uint256 _lockTime = tokenLockerStorage.getLockTime();
+      address _tokenAddress = tokenLockerStorage.getTokenAddress();
+      address _airdropAddress = tokenLockerStorage.getAccount(i);
+      uint256 _airdropAmount = tokenLockerStorage.getAccountBalance(_airdropAddress);
+      
+      _setLockTokens(_tokenAddress, _airdropAddress, _airdropAmount, _lockTime);
+      emit LockTokenAdd(_tokenAddress, _airdropAddress, _airdropAmount);
+    }
   }
   
   modifier onlyOwner() {
@@ -34,23 +50,18 @@ contract TokenLocker {
     _;
   }
 
+  // set the address of the storage contract that this contract should user
+  // all functions will read and write data to this contract
+  function setTokenLockerStorageContract(address _tokenLockerStorageAddress) public onlyOwner() {
+      tokenLockerStorage = TokenLockerStorage(_tokenLockerStorageAddress);  
+  }
+
   function lockTokens(address tokenAddress, uint256 amount, uint256 time) external returns (bool) {
     IERC20 token = IERC20(tokenAddress);
-    TokenLock memory tokenLock;
-    tokenLock.tokenAddress = tokenAddress;
-    tokenLock.lockDate = block.timestamp;
-    tokenLock.amount = amount;
-    tokenLock.unlockDate = block.timestamp.add(time);
-    tokenLock.lockID = numLocks[msg.sender];
-    tokenLock.owner = msg.sender;
-    tokenLock.retrieved = false;
-
     // Transferring token to smart contract
     token.transferFrom(msg.sender, address(this), amount);
-    
-    locks[msg.sender][numLocks[msg.sender]] = tokenLock;
-    numLocks[msg.sender]++;
-
+  
+    _setLockTokens(tokenAddress, msg.sender, amount, time);
     return true;
   }
   
@@ -105,6 +116,21 @@ contract TokenLocker {
 
     // If lock ownership is transferred its retrieved
     locks[msg.sender][lockId].retrieved = true;
+    return true;
   }
 
+  function _setLockTokens(address tokenAddress, address account, uint256 amount, uint256 time) internal returns (bool) {
+    TokenLock memory tokenLock;
+    tokenLock.tokenAddress = tokenAddress;
+    tokenLock.lockDate = block.timestamp;
+    tokenLock.amount = amount;
+    tokenLock.unlockDate = block.timestamp.add(time);
+    tokenLock.lockID = numLocks[account];
+    tokenLock.owner = account;
+    tokenLock.retrieved = false;
+    locks[account][numLocks[account]] = tokenLock;
+    numLocks[account]++;
+
+    return true;
+  }
 }
