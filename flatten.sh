@@ -7,3 +7,5 @@ npx truffle-flattener contracts/core/DutchAuction.sol > flatten/DutchAuction.sol
 npx truffle-flattener contracts/core/MysteryBox.sol > flatten/MysteryBox.sol 
 npx truffle-flattener contracts/core/TrustMarketplace.sol > flatten/TrustMarketplace.sol
 npx truffle-flattener contracts/core/TokenLocker.sol > flatten/TokenLocker.sol
+npx truffle-flattener contracts/core/TokenLockerStorage.sol > flatten/TokenLockerStorage.sol
+npx truffle-flattener contracts/core/TokenLocker.sol > flatten/TokenLocker.sol

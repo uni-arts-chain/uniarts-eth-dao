@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./TokenLockerStorage.sol";
 
-contract TokenLocker {
+contract TokenLocker is Ownable {
   using SafeMath for uint256;
   
   TokenLockerStorage tokenLockerStorage;
-  
-  address owner;
+
+  address voteContractAddress;
   
   struct TokenLock {
     address tokenAddress;
@@ -32,7 +33,6 @@ contract TokenLocker {
 
   constructor(address _tokenLockerStorageAddress) {
     tokenLockerStorage = TokenLockerStorage(_tokenLockerStorageAddress);
-    owner = msg.sender;
     // Init airdrop tokens
     for (uint i=0; i<tokenLockerStorage.getAccountCount(); i++) {
       uint256 _lockTime = tokenLockerStorage.getLockTime();
@@ -44,15 +44,10 @@ contract TokenLocker {
       emit LockTokenAdd(_tokenAddress, _airdropAddress, _airdropAmount);
     }
   }
-  
-  modifier onlyOwner() {
-    require(owner == msg.sender, "Ownable: caller is not the owner");
-    _;
-  }
 
   // set the address of the storage contract that this contract should user
   // all functions will read and write data to this contract
-  function setTokenLockerStorageContract(address _tokenLockerStorageAddress) public onlyOwner() {
+  function setTokenLockerStorageContract(address _tokenLockerStorageAddress) public onlyOwner {
       tokenLockerStorage = TokenLockerStorage(_tokenLockerStorageAddress);  
   }
 
@@ -96,7 +91,7 @@ contract TokenLocker {
     return true;
   }
 
-  function changeOwner(address newOwner, uint256 lockId) external returns (bool) {
+  function changeLockOwner(address newOwner, uint256 lockId) external returns (bool) {
     // Make sure lock exists
     require(lockId < numLocks[msg.sender], "Lock doesn't exist");
     // Make sure lock is still locked
@@ -124,7 +119,7 @@ contract TokenLocker {
     tokenLock.tokenAddress = tokenAddress;
     tokenLock.lockDate = block.timestamp;
     tokenLock.amount = amount;
-    tokenLock.unlockDate = block.timestamp.add(time);
+    tokenLock.unlockDate = time;
     tokenLock.lockID = numLocks[account];
     tokenLock.owner = account;
     tokenLock.retrieved = false;
