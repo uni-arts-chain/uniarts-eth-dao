@@ -4,14 +4,13 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./TokenLockerStorage.sol";
 
 contract TokenLocker is Ownable {
   using SafeMath for uint256;
-  
-  TokenLockerStorage tokenLockerStorage;
 
   address voteAddress = address(0);
+
+  uint constant MAX_IMP_COUNT = 250;
   
   struct TokenLock {
     address tokenAddress;
@@ -23,7 +22,14 @@ contract TokenLocker is Ownable {
     bool retrieved; // false if lock already retreieved
   }
 
+  // structs
+  struct ImpData {
+      address accountAddress;
+      uint256 amount;
+  }
+
   event LockTokenAdd(address tokenAddress, address accountAddress, uint256 amount);
+  event LockTokenImp(address tokenAddress, address accountAddress, uint256 amount);
   event LockTokenVote(address tokenAddress, address accountAddress, uint256 amount);
 
   // Mapping of user to their locks
@@ -35,26 +41,6 @@ contract TokenLocker is Ownable {
   modifier onlyVoter() {
      require(voteAddress == msg.sender, "Ownable: caller is not the vote contract");
      _;
-  }
-
-  constructor(address _tokenLockerStorageAddress) {
-    tokenLockerStorage = TokenLockerStorage(_tokenLockerStorageAddress);
-    // Init airdrop tokens
-    for (uint i=0; i<tokenLockerStorage.getAccountCount(); i++) {
-      uint256 _lockTime = tokenLockerStorage.getLockTime();
-      address _tokenAddress = tokenLockerStorage.getTokenAddress();
-      address _airdropAddress = tokenLockerStorage.getAccount(i);
-      uint256 _airdropAmount = tokenLockerStorage.getAccountBalance(_airdropAddress);
-      
-      _setLockTokens(_tokenAddress, _airdropAddress, _airdropAmount, _lockTime);
-      emit LockTokenAdd(_tokenAddress, _airdropAddress, _airdropAmount);
-    }
-  }
-
-  // set the address of the storage contract that this contract should user
-  // all functions will read and write data to this contract
-  function setTokenLockerStorageContract(address _tokenLockerStorageAddress) public onlyOwner {
-      tokenLockerStorage = TokenLockerStorage(_tokenLockerStorageAddress);  
   }
 
   function setVoteContractAddress(address newAddress) public virtual onlyOwner {
@@ -142,6 +128,21 @@ contract TokenLocker is Ownable {
     emit LockTokenVote(tokenLock.tokenAddress, accountAddress, tokenLock.amount);
 
     return tokenLock.amount;
+  }
+
+  function impLock(address _tokenAddress, uint256 _lockTime, ImpData[] memory accounts) external onlyOwner returns (uint256 count) {
+    // check item count
+    require(accounts.length > 0 && accounts.length <= MAX_IMP_COUNT, "number of nft must be greater than 0 and less than MAX_IMP_COUNT");
+
+    // import item to contract
+    for(uint i = 0; i < accounts.length; ++i) {
+        address _airdropAddress = accounts[i].accountAddress;
+        uint256 _airdropAmount = accounts[i].amount;
+        
+        _setLockTokens(_tokenAddress, _airdropAddress, _airdropAmount, _lockTime);
+        emit LockTokenImp(_tokenAddress, _airdropAddress, _airdropAmount);
+    }
+    return accounts.length;
   }
 
   function _setLockTokens(address tokenAddress, address account, uint256 amount, uint256 time) internal returns (bool) {
