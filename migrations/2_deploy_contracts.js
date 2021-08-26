@@ -7,7 +7,7 @@ const ResellMarketplace = artifacts.require('core/ResellMarketplace');
 const UniArtsNFT = artifacts.require('ERC721/UniArtsNFT');
 const USDT = artifacts.require('ERC20/USDT');
 const Auction = artifacts.require('core/Auction');
-const TokenLockerStorage = artifacts.require('core/TokenLockerStorage');
+const TokenLocker = artifacts.require('core/TokenLocker');
 
 function deployContracts(deployer) {
   deployer.deploy(Marketplace);
@@ -17,7 +17,7 @@ function deployContracts(deployer) {
     deployer.deploy(Auction, USDT.address);
     return deployer.deploy(TrustMarketplace, USDT.address);
   });
-  deployer.deploy(TokenLockerStorage);
+  deployer.deploy(TokenLocker);
 }
 
 module.exports = deployContracts;
