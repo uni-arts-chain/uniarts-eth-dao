@@ -391,7 +391,7 @@ contract VoteMining is Ownable {
 	// 	}
 	// }
 
-	function claimMintRewards(address nftAddr, uint nftId) external onlyPin {
+	function claimMintRewards(address nftAddr, uint nftId, address to) external onlyPin {
 		uint uid = nfts[nftAddr][nftId];
 		uint groupId = nftGroup[nfts[nftAddr][nftId]];
 		require(!mintRewardsClaimed[uid], "Claimed");
@@ -404,7 +404,7 @@ contract VoteMining is Ownable {
 			}
 		}
 		if(rewards > 0) {
-			treasury.sendRewards(msg.sender, rewards);
+			treasury.sendRewards(to, rewards);
 			mintRewardsClaimed[uid] = true;
 		}
 	}
