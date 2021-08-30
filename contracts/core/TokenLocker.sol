@@ -88,28 +88,6 @@ contract TokenLocker is Ownable {
     return true;
   }
 
-  function changeLockOwner(address newOwner, uint256 lockId) external returns (bool) {
-    // Make sure lock exists
-    require(lockId < numLocks[msg.sender], "Lock doesn't exist");
-    // Make sure lock is still locked
-    require(locks[msg.sender][lockId].retrieved == false, "Lock was already unlocked");
-
-    TokenLock storage tokenLock = locks[newOwner][numLocks[newOwner]];
-    tokenLock.tokenAddress = locks[msg.sender][lockId].tokenAddress;
-    tokenLock.lockDate = locks[msg.sender][lockId].lockDate;
-    tokenLock.amount = locks[msg.sender][lockId].amount;
-    tokenLock.unlockDate = locks[msg.sender][lockId].unlockDate;
-    tokenLock.lockID = numLocks[newOwner];
-    tokenLock.owner = newOwner;
-    tokenLock.retrieved = false;
-
-
-    numLocks[newOwner]++;
-
-    // If lock ownership is transferred its retrieved
-    locks[msg.sender][lockId].retrieved = true;
-    return true;
-  }
 
   function subLockForVote(uint256 lockId, address accountAddress) external onlyVoter returns (uint256 amount) {
     // Make sure lock exists
