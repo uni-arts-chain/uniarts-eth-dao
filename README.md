@@ -1,5 +1,11 @@
 ## Uniarts contracts
 
+### Mainnet
+
+- UART: 0x507BDe03A87a6aA134d16634545E3D79c11c137D
+
+- TokenLocker: 0x86649432cd214D83f08804b823013e62D6667dE0
+
 ### Rinkeby Testnet 
 
 - UINK: 0xdb800527445BFfa53b5A152677C527aC8aa16b19
