@@ -10,3 +10,4 @@ npx truffle-flattener contracts/core/TrustMarketplace.sol > flatten/TrustMarketp
 npx truffle-flattener contracts/core/TokenLocker.sol > flatten/TokenLocker.sol
 npx truffle-flattener contracts/core/TokenLockerStorage.sol > flatten/TokenLockerStorage.sol
 npx truffle-flattener contracts/core/TokenLocker.sol > flatten/TokenLocker.sol
+npx truffle-flattener contracts/core/MerkleDistributor.sol > flatten/MerkleDistributor.sol
