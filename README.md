@@ -1,6 +1,6 @@
 ## Uniarts contracts
 
-### Mainnet
+### Ethereum Mainnet
 
 - UART: 0x507BDe03A87a6aA134d16634545E3D79c11c137D
 
@@ -13,6 +13,12 @@
 - TokenLocker: 0x9aE4B33676A1E4f02FeC7B868e73C38C2f5Cf2f0
 
 - UniartsNFT: 0x4c195e61416702F678b1ACEe72f36A5986c205df
+
+### Matic Mainnet
+
+- UART: 0xf244E91A46A9cdd48da295cA5d0B27894f8032B1
+
+- TokenLocker: 0x507BDe03A87a6aA134d16634545E3D79c11c137D
 
 ### Rinkeby Testnet 
 
