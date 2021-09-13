@@ -1,4 +1,4 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { store, Bytes, BigInt } from "@graphprotocol/graph-ts"
 import {
   UniArtsNFT,
   Approval,
