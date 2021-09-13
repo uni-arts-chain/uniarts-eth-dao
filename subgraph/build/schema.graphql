@@ -1,0 +1,59 @@
+type ExampleEntity @entity {
+  id: ID!
+  count: BigInt!
+  owner: Bytes! # address
+  approved: Bytes! # address
+}
+
+type All @entity {
+  id: ID!
+  numTokenContracts: BigInt!
+  numTokens: BigInt!
+  numOwners: BigInt!
+}
+
+type Token @entity {
+  id: ID!
+  contract: TokenContract!
+  tokenID: BigInt!
+  owner: Owner!
+  mintTime: BigInt!
+  tokenURI: String!
+}
+
+type TokenContract @entity {
+  id: ID!
+  name: String,
+  symbol: String,
+  doAllAddressesOwnTheirIdByDefault: Boolean!
+  supportsEIP721Metadata: Boolean!
+  tokens: [Token!]! @derivedFrom(field: "contract")
+  numTokens: BigInt!
+  numOwners: BigInt!
+}
+
+type TokenInfo @entity {
+  id: ID!
+  title: String!
+  class_id: BigInt!
+  size: BigInt!
+}
+
+type Owner @entity {
+  id: ID!
+  tokens: [Token!]! @derivedFrom(field: "owner")
+  numTokens: BigInt!
+}
+
+type OwnerPerTokenContract @entity {
+  id: ID!
+  owner: Owner!
+  contract: TokenContract!
+  numTokens: BigInt!
+}
+
+type TokenTransaction @entity {
+  id: ID!
+  token_id: BigInt!
+  tx_hash: String! # tx_hash
+}
