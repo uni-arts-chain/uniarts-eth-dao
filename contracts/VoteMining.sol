@@ -51,39 +51,74 @@ contract VoteMining is Ownable {
 	mapping (uint => bool) public hasFinished;
 	
 	
-
-	
 	// group id => NFT[]
 	mapping (uint => NFT[]) groupNFTs;
+
 	// date => NFT uid => votes
 	mapping (uint => mapping (uint => uint)) dayVotes;
+
 	// user => date => NFT id => amount
 	mapping (address => mapping (uint => mapping (uint => uint))) userVotes;
-		
+
+	// user => groupId => date => votes
+	mapping (address => mapping (uint => mapping (uint => uint))) userDailyVotes;
+
+	// user => nft uid => votes 
+	mapping (address => mapping (uint => uint)) userNFTVotes;
+	
+
 	// nft address => nftId => internal id
 	mapping (address => mapping (uint => uint)) nfts;
 	uint public nextNFTId = 0;
+
 	// group id => votes
 	mapping (uint => uint) public groupVotes;
 
 	// uid => votes
 	mapping (uint => uint) public nftVotes;
 
+	// date => votes
+	// mapping (uint => uint) public dailyTotalVotes;
+	
+
 	// uid => group id
 	mapping (uint => uint) public nftGroup;
 	
+	address[] public voteTokens;
+	// token => ratio
+	mapping (address => uint) public voteRatio;
+
+	uint public voteRatioMax = 10000;
 	
-	
-	struct VoteBalance {
-		uint balance;
-		uint releaseAt;
+
+	struct Balance {
+		uint available;
+		uint freezed;
+		uint votedAt;
 	}
 
-	// user => amount
-	mapping (address => uint) public balances;
+	struct UnbondingBalance {
+		uint value;
+		uint unbondedAt;
+		uint redeemed;
+	}
 
-	// user => group => amount
-	mapping (address => mapping (uint => VoteBalance)) public nextVotableBalances;
+	// user => token => uid => Balance
+	mapping (address => mapping (address => mapping (uint => Balance))) public balances;
+
+	// user => uid => Balance
+	mapping (address => mapping (uint => Balance)) public votedBalances; // bonded voted balance
+	
+	// user => bonded amount
+	mapping (address => uint) public totalVotedBalances;
+
+	// user => UnbondingBalance[]
+	mapping (address => UnbondingBalance[]) public unbondingBalances;
+	
+	// user => total unbonded amount
+	mapping (address => uint) public unbondedBalances;
+	
+
 	
 	// uid => price
 	mapping (uint => uint) public nftTradedPrices;
@@ -93,6 +128,9 @@ contract VoteMining is Ownable {
 	mapping (address => mapping (uint => bool)) public bonusRewardsClaimed;
 	// nft uid => bool
 	mapping (uint => bool) public mintRewardsClaimed;
+
+	mapping (address => uint) private userRewards;
+	
 	
 
 	mapping (address => bool) public operators;
@@ -102,6 +140,8 @@ contract VoteMining is Ownable {
 	uint public tokenLockId = 0;
 
 	address public tokenLocker;
+
+	event Unbond(address indexed user, uint amount, uint at);
 	
 
 	modifier checkNFT(address nftAddr, uint nftId) { 
@@ -121,25 +161,46 @@ contract VoteMining is Ownable {
 		_; 
 	}
 
+	modifier checkVoteToken(address _token) { 
+		bool isValid = false;
+		for(uint i = 0; i < voteTokens.length; i++) {
+			if(voteTokens[i] == _token) {
+				isValid = true;
+				break;
+			}
+		}
+		require(isValid, "Invalid Vote Token");
+		_; 
+	}
+
+	modifier updateReward(address user) {
+		userRewards[user] = getTotalRewards(user);
+		_; 
+	}
 	
-	
-	constructor(address _treasury, address _auction, address _tokenLocker){
+
+	constructor(address _treasury, address _tokenLocker){
 		treasury = ITreasury(_treasury);
-		auction = _auction;
 		uink = treasury.uink();
 		tokenLocker = _tokenLocker;
+
+		voteTokens.push(uink);
+		voteRatio[uink] = voteRatioMax;
 	}
-	// modifier onlyOperator() {
-	// 	require(operators[msg.sender], "Not operator");
-	// 	_;
-	// }
-	// function addOperator(address _operator) external onlyOwner {
-	// 	operators[_operator] = true;
-	// }
-	
-	// function removeOperator(address _operator) external onlyOwner {
-	// 	operators[_operator] = false;
-	// }
+
+	function addVoteToken(address _token, uint _ratio) external onlyOwner {
+		voteRatio[_token] = _ratio;
+		for(uint i = 0; i < voteTokens.length; i++) {
+			if(voteTokens[i] == _token) {
+				return;
+			}
+		}
+		voteTokens.push(_token);
+	}
+
+	function setAuctionAddress(address _auction) external onlyOwner {
+		auction = _auction;
+	}
 
 	function setPinAddress(address _pin) external onlyOwner {
 		pinAddress = _pin;
@@ -197,49 +258,7 @@ contract VoteMining is Ownable {
 		}
 	}
 
-	function getVotableBalance(address user) public view returns(uint) {
-		uint balance = 0;
-		if(currentGroupId == 0) {
-			return 0;
-		}
-
-		VoteBalance memory preVotableBalance = nextVotableBalances[user][currentGroupId - 1];
-		if(preVotableBalance.releaseAt > block.timestamp) {
-			balance = balance.add(preVotableBalance.balance);
-		}
-
-		return balance;
-	}
-
-	function getAvailableBalance(address user) public view returns(uint) {
-		uint balance = 0;
-		if(currentGroupId == 0) {
-			return balance;
-		}
-
-		for(uint i = 1; i <= currentGroupId; i++) {
-			VoteBalance memory nvBalance = nextVotableBalances[user][i];
-			if(nvBalance.releaseAt < block.timestamp) {
-				balance = balance.add(nvBalance.balance);
-			}
-		}
-		return balance;
-	}
-
-	function getVotedBalance(address user) public view returns(uint) {
-		uint balance = 0;
-		for(uint i = 1; i <= currentGroupId; i++) {
-			VoteBalance memory nvBalance = nextVotableBalances[user][i];
-			if(nvBalance.releaseAt > block.timestamp) {
-				balance = balance.add(nvBalance.balance);
-			}
-		}
-		return balance;
-	}
-
-
-
-	function _vote(address user, address nftAddr, uint nftId, uint amount) internal {
+	function _vote(address user, address nftAddr, uint nftId, uint votes) internal {
 		uint today = getDate(block.timestamp);
 		uint[] memory dates = getVotableDates(currentGroupId);
 		uint uid = nfts[nftAddr][nftId];
@@ -247,148 +266,261 @@ contract VoteMining is Ownable {
 		for(uint i = 0; i < dates.length; i++) {
 			if(dates[i] >= today) {
 				uint date = dates[i];
-				dayVotes[date][uid] = dayVotes[date][uid].add(amount);
-				userVotes[user][date][uid] = userVotes[user][date][uid].add(amount);
+				dayVotes[date][uid] = dayVotes[date][uid].add(votes);
+				userVotes[user][date][uid] = userVotes[user][date][uid].add(votes);
+				userDailyVotes[user][currentGroupId][date] = userDailyVotes[user][currentGroupId][date].add(votes);
+				userNFTVotes[user][uid] = userNFTVotes[user][uid].add(votes);
 			}
 		}
-		nftVotes[uid] = nftVotes[uid].add(amount);
-		groupVotes[currentGroupId] = groupVotes[currentGroupId].add(amount);
+		nftVotes[uid] = nftVotes[uid].add(votes);
+		groupVotes[currentGroupId] = groupVotes[currentGroupId].add(votes);
 	}
 
-	function stakeFromLock(address nftAddr, uint nftId) 
+	function _unvote(address user, address nftAddr, uint nftId, uint votes) internal {
+		uint today = getDate(block.timestamp);
+		uint[] memory dates = getVotableDates(currentGroupId);
+		uint uid = nfts[nftAddr][nftId];
+
+		for(uint i = 0; i < dates.length; i++) {
+			if(dates[i] >= today) {
+				uint date = dates[i];
+				dayVotes[date][uid] = dayVotes[date][uid].sub(votes);
+				userVotes[user][date][uid] = userVotes[user][date][uid].sub(votes);
+				userDailyVotes[user][currentGroupId][date] = userDailyVotes[user][currentGroupId][date].sub(votes);
+				userNFTVotes[user][uid] = userNFTVotes[user][uid].sub(votes);
+			}
+		}
+		nftVotes[uid] = nftVotes[uid].sub(votes);
+		groupVotes[currentGroupId] = groupVotes[currentGroupId].sub(votes);
+	}
+
+	function calcVotes(address token, uint amount) internal view returns(uint256) {
+		return voteRatio[token].mul(amount).div(voteRatioMax);
+	}
+
+	function getAvailableBalance(address user, address token, address nftAddr, uint nftId) public view returns(uint256) {
+		uint uid = nfts[nftAddr][nftId];
+		Balance memory balance = balances[user][token][uid];
+		uint available = balance.available;
+		if(getDate(balance.votedAt) < getDate(block.timestamp)) {
+			available = available.add(balance.freezed);
+		}
+		return available;
+	}
+
+	// stake and vote
+	function stake(address nftAddr, uint nftId, address token, uint amount)
+		external 
+		checkVoteToken(token)
+		checkVotingTime
+		checkNFT(nftAddr, nftId)
+		updateReward(msg.sender)
+	{
+		require(amount > 0, "Amount is zero");
+		uint votes = calcVotes(token, amount);
+		_vote(msg.sender, nftAddr, nftId, votes);
+
+		IERC20(token).transferFrom(msg.sender, address(this), amount);
+
+		uint uid = nfts[nftAddr][nftId];
+
+
+		Balance storage balance = balances[msg.sender][token][uid];
+		if(getDate(balance.votedAt) < getDate(block.timestamp)) {
+			balance.available = balance.available.add(balance.freezed);
+			balance.freezed = 0;
+		}
+		balance.freezed = balance.freezed.add(amount);
+		balance.votedAt = block.timestamp;
+	}
+
+	function unstake(address nftAddr, uint nftId, address token, uint amount)
+		external 
+		checkVoteToken(token)
+		checkNFT(nftAddr, nftId)
+		updateReward(msg.sender)
+	{
+		require(amount > 0, "Amount is zero");
+		
+		uint available = getAvailableBalance(msg.sender, token, nftAddr, nftId);
+		require(available >= amount, "Insufficient balance");
+
+		uint votes = calcVotes(token, amount);
+		_unvote(msg.sender, nftAddr, nftId, votes);
+
+		IERC20(token).transfer(msg.sender, amount);
+		uint uid = nfts[nftAddr][nftId];
+		Balance storage balance = balances[msg.sender][token][uid];
+		if(getDate(balance.votedAt) < getDate(block.timestamp)) {
+			balance.available = balance.available.add(balance.freezed);
+			balance.freezed = 0;
+		}
+		balance.available = balance.available.sub(amount);
+	}
+
+	function getTotalRewards(address user) public view returns(uint) {
+		uint rewards = 0;
+		for(uint groupId = 1; groupId <= currentGroupId; groupId++) {
+			rewards = rewards.add(getBaseRewards(user, groupId)).add(getAuctionRewards(user, groupId));
+		}
+		return rewards;
+	}
+
+	function getBaseRewards(address user, uint groupId) public view returns(uint) {
+		uint[] memory dates = getVotableDates(groupId);
+		uint[] memory rawardRates = getBaseRewardRates(groupId);
+		uint rewards = 0;
+		uint today = getDate(block.timestamp);
+
+		for(uint i = 0; i < dates.length; i++) {
+			if(dates[i] >= today) {
+				break;
+			}
+			uint dayRewards = userDailyVotes[user][groupId][dates[i]].mul(rawardRates[i]).div(1e18);
+			rewards = rewards.add(dayRewards);
+		}
+		return rewards;
+	}
+
+	function getAuctionRewards(address user, uint groupId) public view returns(uint) {
+		if(!hasFinished[groupId]) {
+			return 0;
+		}
+		uint rewards = 0;
+		uint[] memory rewardRates = getAuctionRewardRates(groupId);
+		for(uint i = 0; i < groupNFTs[groupId].length; i++) {
+			uint votes = userNFTVotes[user][groupNFTs[groupId][i].uid];
+			rewards = votes.mul(rewardRates[i]).div(1e18).add(rewards);
+		}
+		return rewards;
+	}
+
+	function getBondedBalance(address user) internal view returns(uint) {
+		uint rewards = userRewards[user];
+		uint freezedBalance = totalVotedBalances[user].add(unbondedBalances[user]);
+		return rewards > freezedBalance ? rewards.sub(freezedBalance) : 0;
+	}
+
+	function getUnvotableBalance(address user, address nftAddr, uint nftId) public view returns(uint256) {
+		uint uid = nfts[nftAddr][nftId];
+		Balance memory balance = votedBalances[user][uid];
+		uint available = balance.available;
+		if(getDate(balance.votedAt) < getDate(block.timestamp)) {
+			available = available.add(balance.freezed);
+		}
+		return available;
+	}
+
+	function voteFromLock(address nftAddr, uint nftId) 
 		external 
 		checkVotingTime
-		checkNFT(nftAddr, nftId) 
+		checkNFT(nftAddr, nftId)
+		updateReward(msg.sender)
 	{
 
 		uint amount = ITokenLocker(tokenLocker).subLockForVote(tokenLockId, msg.sender);
 		_vote(msg.sender, nftAddr, nftId, amount);
+		
+		uint uid = nfts[nftAddr][nftId];
+		Balance storage votedBalance = votedBalances[msg.sender][uid];
 
-		balances[msg.sender] = balances[msg.sender].add(amount);
-
-		VoteBalance storage nvBalance = nextVotableBalances[msg.sender][currentGroupId];
-		nvBalance.balance = nvBalance.balance.add(amount);
-		if(nvBalance.releaseAt == 0) {
-			nvBalance.releaseAt = groups[currentGroupId].add(14 days); 
+		if(getDate(votedBalance.votedAt) < getDate(block.timestamp)) {
+			votedBalance.available = votedBalance.available.add(votedBalance.freezed);
+			votedBalance.freezed = 0;
 		}
+		votedBalance.freezed = votedBalance.freezed.add(amount);
+		votedBalance.votedAt = block.timestamp;
+
+		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].add(amount);
 	}
 
-	// stake and vote
-	function stake(address nftAddr, uint nftId, uint amount)
-		external 
-		checkVotingTime
-		checkNFT(nftAddr, nftId) 
-	{
-		_vote(msg.sender, nftAddr, nftId, amount);
-
-		IERC20(uink).transferFrom(msg.sender, address(this), amount);
-		balances[msg.sender] = balances[msg.sender].add(amount);
-
-
-		VoteBalance storage nvBalance = nextVotableBalances[msg.sender][currentGroupId];
-		nvBalance.balance = nvBalance.balance.add(amount);
-		if(nvBalance.releaseAt == 0) {
-			nvBalance.releaseAt = groups[currentGroupId].add(14 days); 
-		}
-	}
-
-	function vote(address nftAddr, uint nftId, uint amount) 
+	
+	function voteBonded(address nftAddr, uint nftId, uint amount) 
 		external 
 		checkVotingTime
 		checkNFT(nftAddr, nftId)
+		updateReward(msg.sender)
 	{
-		uint votableBalance = getVotableBalance(msg.sender);
-		require(votableBalance >= amount, "Insufficient vote balance");
+		uint bondedBalance = getBondedBalance(msg.sender);
+		require(bondedBalance > amount, "Insufficient bonded balance");
+
 		_vote(msg.sender, nftAddr, nftId, amount);
 
+		uint uid = nfts[nftAddr][nftId];
+		Balance storage votedBalance = votedBalances[msg.sender][uid];
 
-		VoteBalance storage pvBalance = nextVotableBalances[msg.sender][currentGroupId - 1];
-		if(pvBalance.releaseAt > block.timestamp) {
-			pvBalance.balance = pvBalance.balance.sub(amount);
+		if(getDate(votedBalance.votedAt) < getDate(block.timestamp)) {
+			votedBalance.available = votedBalance.available.add(votedBalance.freezed);
+			votedBalance.freezed = 0;
 		}
+		votedBalance.freezed = votedBalance.freezed.add(amount);
+		votedBalance.votedAt = block.timestamp;
 
-		VoteBalance storage nvBalance = nextVotableBalances[msg.sender][currentGroupId];
-		nvBalance.balance = nvBalance.balance.add(amount);
-		if(nvBalance.releaseAt == 0) {
-			nvBalance.releaseAt = groups[currentGroupId].add(14 days);			
+		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].add(amount);
+	}
+
+	function unvoteBonded(address nftAddr, uint nftId, uint amount)
+		external 
+		checkVotingTime
+		checkNFT(nftAddr, nftId)
+		updateReward(msg.sender)
+	{
+		uint unvotable = getUnvotableBalance(msg.sender, nftAddr, nftId);
+		require(unvotable > amount, "Insufficient unvotable balance");
+		_unvote(msg.sender, nftAddr, nftId, amount);
+
+		uint uid = nfts[nftAddr][nftId];
+		Balance storage votedBalance = votedBalances[msg.sender][uid];
+
+		if(getDate(votedBalance.votedAt) < getDate(block.timestamp)) {
+			votedBalance.available = votedBalance.available.add(votedBalance.freezed);
+			votedBalance.freezed = 0;
 		}
+		votedBalance.available = votedBalance.available.sub(amount);
+
+		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].sub(amount);
 	}
 
 
-	function redeem() external {
-		uint total = 0;
-		for(uint i = 1; i <= currentGroupId; i++) {
-			VoteBalance storage nvBalance = nextVotableBalances[msg.sender][i];
-			if(nvBalance.releaseAt < block.timestamp) {
-				total = total.add(nvBalance.balance);
-				nvBalance.balance = 0;
-			}
-		}
+	function unbond(uint amount) 
+		external 
+		updateReward(msg.sender)
+	{
+		uint bondedBalance = getBondedBalance(msg.sender);
+		require(bondedBalance > amount, "Insufficient bonded balance");
 
-		if(total > 0) {
-			IERC20(uink).transfer(msg.sender, total);	
-		}
+		unbondingBalances[msg.sender].push(UnbondingBalance({
+			value: amount,
+			unbondedAt: block.timestamp,
+			redeemed: 0
+		}));
+		
+		unbondedBalances[msg.sender] = unbondedBalances[msg.sender].add(amount);
+
+		emit Unbond(msg.sender, amount, block.timestamp);
 	}
 
-	function getUserDailyVotes(address user, uint groupId, uint date) public view returns(uint) {
-		uint votes = 0;
-		NFT[] memory gNFTs = groupNFTs[groupId];
-		for(uint i = 0; i < gNFTs.length; i++) {
-			votes = userVotes[user][date][gNFTs[i].uid].add(votes);
-		}
-		return votes;
-	}
+	function redeemUnbonding(uint index) 
+		external 
+		updateReward(msg.sender)
+	{ 
+		UnbondingBalance storage unbondingBalance = unbondingBalances[msg.sender][index];
+		uint passDays = getDate(block.timestamp).sub(getDate(unbondingBalance.unbondedAt)).div(1 days);
+		uint released = passDays.mul(unbondingBalance.value).div(60);
+		uint available = released.sub(unbondingBalance.redeemed);
+		unbondingBalance.redeemed = released;
 
-	function getUserVotesByNFT(address user, uint groupId, uint uid) public view returns(uint) {
-		uint[] memory dates = getVotableDates(groupId);
-		uint votes = 0;
-		for(uint i = 0; i < dates.length; i++) {
-			votes = userVotes[user][dates[i]][uid].add(votes);
-		}
-		return votes;
-	}
-
-	function claimVoteRewards(uint groupId) external {
-
-
-		uint[] memory dates = getVotableDates(groupId);
-		uint[] memory rawardRates = getBaseRewardRates(groupId);
-
-		uint rewards = 0;
-		uint today = getDate(block.timestamp);
-		for(uint i = 0; i < dates.length; i++) {
-			if(dates[i] >= today){
-				break;
-			}
-			if(voteRewardsClaimed[msg.sender][groupId][dates[i]]){
-				continue;
-			}
-
-			uint dayRewards = getUserDailyVotes(msg.sender, groupId, dates[i]).mul(rawardRates[i]).div(1e18);
-			if(dayRewards > 0) {
-				rewards = rewards.add(dayRewards);
-			}
-		}
-
-		if(rewards > 0) {
-			treasury.sendRewards(msg.sender, rewards);
-		}
+		treasury.sendRewards(msg.sender, available);
 	}
 
 
-	// function claimMintRewards(uint groupId) external {
-	// 	require(!mintRewardsClaimed[msg.sender][groupId], "Claimed");
-	// 	require(groupId <= currentGroupId && groups[groupId] > 0, "Invalid group ID");
-	// 	require(groups[groupId] + 7 days < block.timestamp, "Voting is not finished");
-	// 	uint rewards = 0;
-	// 	for(uint i = 0; i < groupNFTs[groupId].length; i++) {
-	// 		if(groupNFTs[groupId][i].owner == msg.sender) {
-	// 			rewards = rewards.add(getMintRewardsPerNFT(groupId)[i]);
-	// 		}
+	// function getUserVotesByNFT(address user, uint groupId, uint uid) public view returns(uint) {
+	// 	uint[] memory dates = getVotableDates(groupId);
+	// 	uint votes = 0;
+	// 	for(uint i = 0; i < dates.length; i++) {
+	// 		votes = userVotes[user][dates[i]][uid].add(votes);
 	// 	}
-	// 	if(rewards > 0) {
-	// 		treasury.sendRewards(msg.sender, rewards);
-	// 	}
+	// 	return votes;
 	// }
 
 	function claimMintRewards(address nftAddr, uint nftId, address to) external onlyPin {
@@ -409,22 +541,6 @@ contract VoteMining is Ownable {
 		}
 	}
 
-	function claimBonusRewards(uint groupId) external {
-		require(hasFinished[groupId], "Acution is not over");
-		require(!bonusRewardsClaimed[msg.sender][groupId], "Claimed");
-		uint[] memory rewardRates = getBonusRewardRates(groupId);
-		uint rewards = 0;
-		for(uint i = 0; i < groupNFTs[groupId].length; i++) {
-			if(groupNFTs[groupId][i].owner == msg.sender) {
-				uint votes = getUserVotesByNFT(msg.sender, groupId, groupNFTs[groupId][i].uid);
-				rewards = votes.mul(rewardRates[i]).div(1e18).add(rewards);
-			}
-		}
-		if(rewards > 0) {
-			treasury.sendRewards(msg.sender, rewards);
-		}
-	}
-
 	function getTradeWeights(uint groupId) public view returns(uint[] memory weights) {
 		NFT[] memory gNFTs = groupNFTs[groupId];
 		weights = new uint[](gNFTs.length);
@@ -442,18 +558,18 @@ contract VoteMining is Ownable {
 		hasFinished[groupId] = true;
 	}
 
-	function getBonusRewardRates(uint groupId) public view returns(uint[] memory bonusRewardRates) {
+	function getAuctionRewardRates(uint groupId) public view returns(uint[] memory auctionRewardRates) {
 		uint[] memory weights = getTradeWeights(groupId);
 		NFT[] memory gNFTs = groupNFTs[groupId];
-		bonusRewardRates = new uint[](gNFTs.length);
+		auctionRewardRates = new uint[](gNFTs.length);
 		(, uint[] memory inflations) = getWeightsAndInflations(groupId);
 		uint bonus = bonusCap.mul(inflations[inflations.length - 1]).div(1e18);
 
 		for(uint i = 0; i < gNFTs.length; i++) {
 			if(nftVotes[gNFTs[i].uid] == 0) {
-				bonusRewardRates[i] = 0;
+				auctionRewardRates[i] = 0;
 			} else {
-				bonusRewardRates[i] = bonus.mul(weights[i]).div(nftVotes[gNFTs[i].uid]);
+				auctionRewardRates[i] = bonus.mul(weights[i]).div(nftVotes[gNFTs[i].uid]);
 			}
 		}
 	}
@@ -504,10 +620,12 @@ contract VoteMining is Ownable {
 
 		for(uint i = 0; i < dates.length; i++) {
 			if(dates[i] > getDate(block.timestamp)) {
-				continue;
+				break;
 			}
 			uint dailyTotalVotes = getDailyVotes(groupId, dates[i]);
-			rewardRates[i] = inflations[i].mul(dailyVoteRewardCap).div(dailyTotalVotes);
+			if(dailyTotalVotes > 0) {
+				rewardRates[i] = inflations[i].mul(dailyVoteRewardCap).div(dailyTotalVotes);
+			}
 		}
 	}
 
