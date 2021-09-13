@@ -1,6 +1,6 @@
 specVersion: 0.0.2
 schema:
-  file: ./schema.graphql
+  file: schema.graphql
 dataSources:
   - kind: ethereum/contract
     name: UniArtsNFT
@@ -8,7 +8,7 @@ dataSources:
     source:
       address: "0x4c195e61416702F678b1ACEe72f36A5986c205df"
       abi: UniArtsNFT
-      startBlock: 18651930
+      startBlock: 18651940
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -22,7 +22,7 @@ dataSources:
         - Transfer
       abis:
         - name: UniArtsNFT
-          file: ./abis/UniArtsNFT.json
+          file: UniArtsNFT/abis/UniArtsNFT.json
       eventHandlers:
         - event: Approval(indexed address,indexed address,indexed uint256)
           handler: handleApproval
@@ -36,4 +36,4 @@ dataSources:
           handler: handleRoleRevoked
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransfer
-      file: ./src/mapping.ts
+      file: UniArtsNFT/UniArtsNFT.wasm
