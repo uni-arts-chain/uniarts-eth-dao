@@ -47,3 +47,25 @@
 - TokenLocker: 0xa2b9388458A34B1054387735B2b01B32F33607E0
 
 - MerkleDistributor: 0x129078fB21E15c8F3e6B796135eaB9E24dcf8Eb2
+
+# Indexing Services
+
+✔ Write compiled subgraph to build/
+
+  Add file to IPFS build/schema.graphql
+
+                .. QmboC9t689c7zm1phEP4rqSkbrkFoV7cVUHWNeHn4aWv1u
+
+  Add file to IPFS build/UniArtsNFT/abis/UniArtsNFT.json
+
+                .. QmVysL17A66cuUmSKes4i67t5B2ZkvTwr9SgdbUBfoavwx
+
+  Add file to IPFS build/UniArtsNFT/UniArtsNFT.wasm
+
+                .. QmagNhF1CRkEjoW8N2T9p17MdCY8dXsAj5fmgqWdbdkJNg
+
+✔ Upload subgraph to IPFS
+
+Build completed: QmQg7AoMkQ25YGG9btkr2fBhHbB4xyCVJ89G2jym2d93rj
+
+Deployed to https://thegraph.com/explorer/subgraph/tuminfei/uniarts-dao
