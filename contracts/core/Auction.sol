@@ -28,6 +28,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
         address contractAddress;
         uint    tokenId;
         uint    minBid;
+        uint    fixedPrice;
     }
     
     struct AuctionResult {
@@ -184,6 +185,45 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
         IERC20(USDT_ADDRESS).safeTransferFrom(playerAddress, address(this), transferAmount);
     }
 
+    function player_fixed_price(string memory matchId, uint tokenIndex) external nonReentrant validTokenIndex(matchId, tokenIndex) {
+        Match memory amatch = matches[matchId];
+        address playerAddress = msg.sender;
+        require(amatch.openBlock < block.number && block.number <= amatch.expiryBlock, "match is not opened for bidding");
+        
+        AuctionResult memory auctionResult = matchResults[matchId][tokenIndex];
+        uint standingBid = auctionResult.standingBid;
+        uint fixedPrice  = matchNFTs[matchId][tokenIndex].fixedPrice;
+
+        // check standingBid price
+        require(fixedPrice > standingBid, "Standingbid has exceeded the fixedPrice");
+
+        // update the winner for that token
+        matchResults[matchId][tokenIndex] = AuctionResult(playerAddress, fixedPrice);
+    
+        // if in BLOCKS_TO_EXPIRE blocks then extends the auction expiry time
+        if (amatch.expiryBlock - block.number < BLOCKS_TO_EXPIRE) {
+            amatch.expiryBlock += amatch.expiryExtension;
+            matches[matchId].expiryBlock = amatch.expiryBlock;
+        }
+
+        // just transfer (amount - currentBid) of that person to contract
+        uint transferAmount = fixedPrice - playerBid[matchId][playerAddress][tokenIndex]; // sure that amount always higher than current
+        playerBid[matchId][playerAddress][tokenIndex] = fixedPrice;
+    
+        // emit event
+        emit PlayerBidEvent(
+            matchId, 
+            playerAddress,
+            tokenIndex,
+            fixedPrice, 
+            amatch.expiryBlock
+        );
+        IERC20(USDT_ADDRESS).safeTransferFrom(playerAddress, address(this), transferAmount);
+
+        // send NFT
+        _win_audit(matchId, tokenIndex);
+    }
+
     // player can withdraw bid if he is not winner of this match
     function player_withdraw_bid(string memory matchId, uint tokenIndex) external nonReentrant validTokenIndex(matchId, tokenIndex) {
         
@@ -203,22 +243,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
 
     // anyone can call reward, top bidder and creator are incentivized to call this function to send rewards/profit
     function reward(string memory matchId, uint tokenIndex) external validTokenIndex(matchId, tokenIndex) matchFinished(matchId) {
-        
-        address winnerAddress  = matchResults[matchId][tokenIndex].topBidder;
-        require(winnerAddress != ADDRESS_NULL, "winner is not valid");
-
-        // set result to null
-        matchResults[matchId][tokenIndex] = AuctionResult(ADDRESS_NULL, 0);
-
-        // increase creator's balance
-        uint standingBid = playerBid[matchId][winnerAddress][tokenIndex];
-        playerBid[matchId][winnerAddress][tokenIndex]   = 0;
-        creatorBalance[matches[matchId].creatorAddress] += standingBid;
-        
-        NFT memory nft = matchNFTs[matchId][tokenIndex];
-        // send nft to “address”
-        IERC721(nft.contractAddress).safeTransferFrom(address(this), winnerAddress, nft.tokenId);
-        emit RewardEvent(matchId, tokenIndex, winnerAddress);
+        _win_audit(matchId, tokenIndex);
     }
 
     function process_withdraw_nft(string memory matchId, uint tokenIndex) private {
@@ -290,5 +315,25 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
 
     function get_creator_balance(address creatorAddress) external view returns(uint) {
         return creatorBalance[creatorAddress];
+    }
+
+    function _win_audit(string memory matchId, uint tokenIndex) internal returns (bool) {
+        address winnerAddress  = matchResults[matchId][tokenIndex].topBidder;
+        require(winnerAddress != ADDRESS_NULL, "winner is not valid");
+
+        // set result to null
+        matchResults[matchId][tokenIndex] = AuctionResult(ADDRESS_NULL, 0);
+
+        // increase creator's balance
+        uint standingBid = playerBid[matchId][winnerAddress][tokenIndex];
+        playerBid[matchId][winnerAddress][tokenIndex]   = 0;
+        creatorBalance[matches[matchId].creatorAddress] += standingBid;
+        
+        NFT memory nft = matchNFTs[matchId][tokenIndex];
+        // send nft to “address”
+        IERC721(nft.contractAddress).safeTransferFrom(address(this), winnerAddress, nft.tokenId);
+        emit RewardEvent(matchId, tokenIndex, winnerAddress);
+
+        return true;
     }
 }
