@@ -64,18 +64,32 @@
 
   Add file to IPFS build/schema.graphql
 
-                .. QmboC9t689c7zm1phEP4rqSkbrkFoV7cVUHWNeHn4aWv1u
+                .. QmZyyWBnVSbrfeuutABmZ1ZzTwntmv1agjBsyBRqySmxBk
 
   Add file to IPFS build/UniArtsNFT/abis/UniArtsNFT.json
 
                 .. QmVysL17A66cuUmSKes4i67t5B2ZkvTwr9SgdbUBfoavwx
 
+  Add file to IPFS build/Auction/abis/Auction.json
+
+                .. QmUxZu9zqCVabWtKvjmCe8EG1eCVpkaibEQGmCwHeaE4zq
+
   Add file to IPFS build/UniArtsNFT/UniArtsNFT.wasm
 
                 .. QmagNhF1CRkEjoW8N2T9p17MdCY8dXsAj5fmgqWdbdkJNg
 
+  Add file to IPFS build/Auction/Auction.wasm
+
+                .. QmfNKKr7eKi9a4pycUc7uECgZLFdUbN3eHu9LqckUN8MhU
+                
 ✔ Upload subgraph to IPFS
 
-Build completed: QmQg7AoMkQ25YGG9btkr2fBhHbB4xyCVJ89G2jym2d93rj
+Build completed: QmfKW7oLfxphwVrr7hfyuZZzficMP6m2zUWKBezSpunzBu
 
 Deployed to https://thegraph.com/explorer/subgraph/tuminfei/uniarts-dao
+
+Subgraph endpoints:
+
+Queries (HTTP):     https://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao
+
+Subscriptions (WS): wss://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao
