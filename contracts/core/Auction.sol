@@ -62,7 +62,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
     mapping(address => uint) private creatorBalance;
 
     // events
-    event CreateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, NFT[] nfts);
+    event CreateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, NFT nfts);
     event PlayerBidEvent(string matchId, address playerAddress, uint tokenIndex, uint bid, uint96 expiryBlock);
     event RewardEvent(string matchId, uint tokenIndex, address winnerAddress);
 
@@ -139,7 +139,10 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
 
         // emit events
         // reateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, NFT[] nfts);
-        emit CreateAuctionEvent(msg.sender, matchId, openBlock, expiryBlock, minIncrement, expiryExtension, nfts);
+        for(uint i = 0; i < nfts.length; ++i) {
+            emit CreateAuctionEvent(msg.sender, matchId, openBlock, expiryBlock, minIncrement, expiryExtension, nfts[i]);
+        }
+        
     }
 
     function player_bid(string memory matchId, uint tokenIndex, uint amount) external nonReentrant validTokenIndex(matchId, tokenIndex) {
@@ -254,7 +257,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
         IERC721(nft.contractAddress).safeTransferFrom(address(this), msg.sender, nft.tokenId);
     }
 
-    // çreator withdraws unused nft
+    // creator withdraws unused nft
     function creator_withdraw_nft_batch(string memory matchId) external creatorOnly(matchId) matchFinished(matchId) { 
         // check valid matchId, match finished
         uint _len = matches[matchId].nftCount;
