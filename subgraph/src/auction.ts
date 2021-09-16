@@ -22,10 +22,10 @@ export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
   entity.expiryBlock = event.params.expiryBlock
   entity.increment = event.params.increment
   entity.expiryExtension = event.params.expiryExtension
-  entity.nft_contract_address = event.params.nfts.value0
-  entity.nft_token_id = event.params.nfts.value1
-  entity.nft_min_bid = event.params.nfts.value2
-  entity.nft_fixed_price = event.params.nfts.value3
+  entity.nft_contract_address = event.params.nfts.contractAddress
+  entity.nft_token_id = event.params.nfts.tokenId
+  entity.nft_min_bid = event.params.nfts.minBid
+  entity.nft_fixed_price = event.params.nfts.fixedPrice
   entity.save()
 
   // Note: If a handler doesn't require existing field values, it is faster
