@@ -533,3 +533,133 @@ export class TokenTransaction extends Entity {
     this.set("tx_hash", Value.fromString(value));
   }
 }
+
+export class AuctionList extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save AuctionList entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save AuctionList entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("AuctionList", id.toString(), this);
+  }
+
+  static load(id: string): AuctionList | null {
+    return store.get("AuctionList", id) as AuctionList | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get count(): BigInt {
+    let value = this.get("count");
+    return value.toBigInt();
+  }
+
+  set count(value: BigInt) {
+    this.set("count", Value.fromBigInt(value));
+  }
+
+  get creatorAddress(): Bytes {
+    let value = this.get("creatorAddress");
+    return value.toBytes();
+  }
+
+  set creatorAddress(value: Bytes) {
+    this.set("creatorAddress", Value.fromBytes(value));
+  }
+
+  get matchId(): string {
+    let value = this.get("matchId");
+    return value.toString();
+  }
+
+  set matchId(value: string) {
+    this.set("matchId", Value.fromString(value));
+  }
+
+  get openBlock(): BigInt {
+    let value = this.get("openBlock");
+    return value.toBigInt();
+  }
+
+  set openBlock(value: BigInt) {
+    this.set("openBlock", Value.fromBigInt(value));
+  }
+
+  get expiryBlock(): BigInt {
+    let value = this.get("expiryBlock");
+    return value.toBigInt();
+  }
+
+  set expiryBlock(value: BigInt) {
+    this.set("expiryBlock", Value.fromBigInt(value));
+  }
+
+  get increment(): BigInt {
+    let value = this.get("increment");
+    return value.toBigInt();
+  }
+
+  set increment(value: BigInt) {
+    this.set("increment", Value.fromBigInt(value));
+  }
+
+  get expiryExtension(): BigInt {
+    let value = this.get("expiryExtension");
+    return value.toBigInt();
+  }
+
+  set expiryExtension(value: BigInt) {
+    this.set("expiryExtension", Value.fromBigInt(value));
+  }
+
+  get nft_contract_address(): Bytes {
+    let value = this.get("nft_contract_address");
+    return value.toBytes();
+  }
+
+  set nft_contract_address(value: Bytes) {
+    this.set("nft_contract_address", Value.fromBytes(value));
+  }
+
+  get nft_token_id(): BigInt {
+    let value = this.get("nft_token_id");
+    return value.toBigInt();
+  }
+
+  set nft_token_id(value: BigInt) {
+    this.set("nft_token_id", Value.fromBigInt(value));
+  }
+
+  get nft_min_bid(): BigInt {
+    let value = this.get("nft_min_bid");
+    return value.toBigInt();
+  }
+
+  set nft_min_bid(value: BigInt) {
+    this.set("nft_min_bid", Value.fromBigInt(value));
+  }
+
+  get nft_fixed_price(): BigInt {
+    let value = this.get("nft_fixed_price");
+    return value.toBigInt();
+  }
+
+  set nft_fixed_price(value: BigInt) {
+    this.set("nft_fixed_price", Value.fromBigInt(value));
+  }
+}
