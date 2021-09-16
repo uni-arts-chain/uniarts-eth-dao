@@ -10,7 +10,7 @@ import { AuctionList } from "../generated/schema"
 export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
   let tokenId = event.params.nfts.tokenId
   let contractAddress = entity.nft_contract_address = event.params.nfts.contractAddress
-  let id = event.transaction.hash.toHex() + '_' + contractAddress.toHex() + '_' + tokenId.toString()
+  let id = event.transaction.hash.toHex() + '_' + contractAddress.toString() + '_' + tokenId.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
