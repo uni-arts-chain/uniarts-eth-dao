@@ -13,7 +13,7 @@ export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
-  entity = new AuctionList(tx_hash)
+  let entity = new AuctionList(tx_hash)
 
   entity.count = BigInt.fromI32(1)
   entity.creatorAddress = event.params.creatorAddress
