@@ -57,3 +57,20 @@ type TokenTransaction @entity {
   token_id: BigInt!
   tx_hash: String! # tx_hash
 }
+
+type AuctionList @entity {
+  id: ID!
+  count: BigInt!
+  creatorAddress: Bytes! # address
+  matchId: String! # string
+  openBlock: BigInt!
+  expiryBlock: BigInt!
+  increment: BigInt!
+  expiryExtension: BigInt!
+  tokenIndex: BigInt!
+  nft_contract_address: Bytes! # address
+  nft_token_id: BigInt!
+  nft_min_bid: BigInt!
+  nft_fixed_price: BigInt!
+}
+    
