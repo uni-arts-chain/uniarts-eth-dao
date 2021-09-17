@@ -672,3 +672,80 @@ export class AuctionList extends Entity {
     this.set("nft_fixed_price", Value.fromBigInt(value));
   }
 }
+
+export class AuctionBidList extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save AuctionBidList entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save AuctionBidList entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("AuctionBidList", id.toString(), this);
+  }
+
+  static load(id: string): AuctionBidList | null {
+    return store.get("AuctionBidList", id) as AuctionBidList | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get matchId(): string {
+    let value = this.get("matchId");
+    return value.toString();
+  }
+
+  set matchId(value: string) {
+    this.set("matchId", Value.fromString(value));
+  }
+
+  get playerAddress(): Bytes {
+    let value = this.get("playerAddress");
+    return value.toBytes();
+  }
+
+  set playerAddress(value: Bytes) {
+    this.set("playerAddress", Value.fromBytes(value));
+  }
+
+  get tokenIndex(): BigInt {
+    let value = this.get("tokenIndex");
+    return value.toBigInt();
+  }
+
+  set tokenIndex(value: BigInt) {
+    this.set("tokenIndex", Value.fromBigInt(value));
+  }
+
+  get bid(): BigInt {
+    let value = this.get("bid");
+    return value.toBigInt();
+  }
+
+  set bid(value: BigInt) {
+    this.set("bid", Value.fromBigInt(value));
+  }
+
+  get expiryBlock(): BigInt {
+    let value = this.get("expiryBlock");
+    return value.toBigInt();
+  }
+
+  set expiryBlock(value: BigInt) {
+    this.set("expiryBlock", Value.fromBigInt(value));
+  }
+}
+
