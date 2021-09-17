@@ -30,7 +30,9 @@
 
 - TokenLocker: 0x507BDe03A87a6aA134d16634545E3D79c11c137D
 
-### Rinkeby Testnet 
+### Rinkeby Testnet
+
+- UART: 0xf51D9714b74644a224E7f62E56D4A87e1f1fb2E0
 
 - UINK: 0xdb800527445BFfa53b5A152677C527aC8aa16b19
 
@@ -40,13 +42,13 @@
 
 - Pin: 0xb0F55f7468A6F781d09D0B84cfD14C34F5566A62
 
-- UniartsNFT: 0xD5ac05A6921C504f25a7E3c8913281CCac66afb8
+- UniartsNFT: 0x5F48872D2F81d555c287F1dc2379B6E5fe1346C8
 
 - USDT: 0xFd9CA9e22bd54260B87834966d26055620aFdbFf
 
 - Marketplace: 0x8b4aC6FF8017F05F897c6e95539894424ef2e1Ec
 
-- Auction: 0xC1e73f7BFdDab19b420ee1644995a1e4503cc71E
+- Auction: 0xeAf46f8F0AEa4Ee85737a4f0f2a07798a5204E8e
 
 - DutchAuction: 0xFd9CA9e22bd54260B87834966d26055620aFdbFf
 
@@ -54,7 +56,7 @@
 
 - TrustMarketplace: 0xFd9CA9e22bd54260B87834966d26055620aFdbFf
 
-- TokenLocker: 0xa2b9388458A34B1054387735B2b01B32F33607E0
+- TokenLocker: 0x59eD992BC4403FAF2a83C0D9E2213DF4d8d8Eb86
 
 - MerkleDistributor: 0x129078fB21E15c8F3e6B796135eaB9E24dcf8Eb2
 
@@ -86,6 +88,8 @@
 
 Build completed: QmfKW7oLfxphwVrr7hfyuZZzficMP6m2zUWKBezSpunzBu
 
+## Mumbai-Testnet
+
 Deployed to https://thegraph.com/explorer/subgraph/tuminfei/uniarts-dao
 
 Subgraph endpoints:
@@ -93,6 +97,15 @@ Subgraph endpoints:
 Queries (HTTP):     https://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao
 
 Subscriptions (WS): wss://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao
+
+## Rinkeby Testnet
+
+Deployed to https://thegraph.com/explorer/subgraph/tuminfei/uniarts-dao-rinkeby
+
+Subgraph endpoints:
+Queries (HTTP):     https://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao-rinkeby
+Subscriptions (WS): wss://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao-rinkeby
+
 
 
 # Polygonscan

@@ -73,4 +73,12 @@ type AuctionList @entity {
   nft_min_bid: BigInt!
   nft_fixed_price: BigInt!
 }
-    
+
+type AuctionBidList @entity {
+  id: ID!
+  matchId: String! # string
+  playerAddress: Bytes! # address
+  tokenIndex: BigInt!
+  bid: BigInt!
+  expiryBlock: BigInt!
+}
