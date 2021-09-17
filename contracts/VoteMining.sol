@@ -24,7 +24,7 @@ interface ITokenLocker {
 contract VoteMining is Ownable {
 	using SafeMath for uint256;
 
-	uint public weeklyCap = 50000 * 1e18;
+	uint public weeklyCap = 50000 * 1e12;
 	uint public dailyVoteRewardCap = weeklyCap / 7 / 4; // 25% of daily cap 
 	uint public dailyMintRewardCap = weeklyCap / 7 / 4; // 25% of daily cap 
 	uint public bonusCap = weeklyCap  / 2; // 50% of weekly cap
@@ -52,23 +52,23 @@ contract VoteMining is Ownable {
 	
 	
 	// group id => NFT[]
-	mapping (uint => NFT[]) groupNFTs;
+	mapping (uint => NFT[]) public groupNFTs;
 
 	// date => NFT uid => votes
-	mapping (uint => mapping (uint => uint)) dayVotes;
+	mapping (uint => mapping (uint => uint)) public dayVotes;
 
 	// user => date => NFT id => amount
-	mapping (address => mapping (uint => mapping (uint => uint))) userVotes;
+	mapping (address => mapping (uint => mapping (uint => uint))) public userVotes;
 
 	// user => groupId => date => votes
-	mapping (address => mapping (uint => mapping (uint => uint))) userDailyVotes;
+	mapping (address => mapping (uint => mapping (uint => uint))) public userDailyVotes;
 
 	// user => nft uid => votes 
-	mapping (address => mapping (uint => uint)) userNFTVotes;
+	mapping (address => mapping (uint => uint)) public userNFTVotes;
 	
 
 	// nft address => nftId => internal id
-	mapping (address => mapping (uint => uint)) nfts;
+	mapping (address => mapping (uint => uint)) public nfts;
 	uint public nextNFTId = 0;
 
 	// group id => votes
