@@ -47,8 +47,12 @@ export class CreateAuctionEvent__Params {
     return this._event.parameters[5].value.toBigInt();
   }
 
+  get tokenIndex(): BigInt {
+    return this._event.parameters[6].value.toBigInt();
+  }
+
   get nfts(): CreateAuctionEventNftsStruct {
-    return this._event.parameters[6].value.toTuple() as CreateAuctionEventNftsStruct;
+    return this._event.parameters[7].value.toTuple() as CreateAuctionEventNftsStruct;
   }
 }
 

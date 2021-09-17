@@ -627,6 +627,15 @@ export class AuctionList extends Entity {
     this.set("expiryExtension", Value.fromBigInt(value));
   }
 
+  get tokenIndex(): BigInt {
+    let value = this.get("tokenIndex");
+    return value.toBigInt();
+  }
+
+  set tokenIndex(value: BigInt) {
+    this.set("tokenIndex", Value.fromBigInt(value));
+  }
+
   get nft_contract_address(): Bytes {
     let value = this.get("nft_contract_address");
     return value.toBytes();

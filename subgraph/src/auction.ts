@@ -8,9 +8,8 @@ import {
 import { AuctionList } from "../generated/schema"
 
 export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
-  let tokenId = event.params.nfts.tokenId
-  let contractAddress = event.params.nfts.contractAddress
-  let id = event.transaction.hash.toHex() + '_' + contractAddress.toHex().toString() + '_' + tokenId.toString()
+  let tokenIndex = event.params.tokenIndex
+  let id = event.transaction.hash.toHex() + '_' + tokenIndex.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
@@ -23,6 +22,7 @@ export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
   entity.expiryBlock = event.params.expiryBlock
   entity.increment = event.params.increment
   entity.expiryExtension = event.params.expiryExtension
+  entity.tokenIndex = event.params.tokenIndex
   entity.nft_contract_address = event.params.nfts.contractAddress
   entity.nft_token_id = event.params.nfts.tokenId
   entity.nft_min_bid = event.params.nfts.minBid

@@ -62,7 +62,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
     mapping(address => uint) private creatorBalance;
 
     // events
-    event CreateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, NFT nfts);
+    event CreateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, uint tokenIndex, NFT nfts);
     event PlayerBidEvent(string matchId, address playerAddress, uint tokenIndex, uint bid, uint96 expiryBlock);
     event RewardEvent(string matchId, uint tokenIndex, address winnerAddress);
 
@@ -138,9 +138,9 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
         );
 
         // emit events
-        // reateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, NFT[] nfts);
+        // reateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, uint tokenIndex, NFT nfts);
         for(uint i = 0; i < nfts.length; ++i) {
-            emit CreateAuctionEvent(msg.sender, matchId, openBlock, expiryBlock, minIncrement, expiryExtension, nfts[i]);
+            emit CreateAuctionEvent(msg.sender, matchId, openBlock, expiryBlock, minIncrement, expiryExtension, i, nfts[i]);
         }
         
     }
