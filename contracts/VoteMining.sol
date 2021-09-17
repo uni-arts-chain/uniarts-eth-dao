@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 
 interface ITreasury {
@@ -130,6 +131,10 @@ contract VoteMining is Ownable {
 	mapping (uint => bool) public mintRewardsClaimed;
 
 	mapping (address => uint) private userRewards;
+
+	// groupId => user => token => balance
+	mapping (uint => mapping (address => mapping (address => uint))) public groupTokenBalances;
+	
 	
 	
 
@@ -141,7 +146,9 @@ contract VoteMining is Ownable {
 
 	address public tokenLocker;
 
+	event Redeem(address indexed user, address token, uint amount);
 	event Unbond(address indexed user, uint amount, uint at);
+
 	
 
 	modifier checkNFT(address nftAddr, uint nftId) { 
@@ -153,6 +160,12 @@ contract VoteMining is Ownable {
 		require(msg.sender == pinAddress, "Forbidden"); 
 		_; 
 	}
+
+	modifier onlyOperator() { 
+		require (operators[msg.sender] || owner() == _msgSender(), "Not operator"); 
+		_; 
+	}
+	
 	
 
 	modifier checkVotingTime() { 
@@ -188,7 +201,7 @@ contract VoteMining is Ownable {
 		voteRatio[uink] = voteRatioMax;
 	}
 
-	function addVoteToken(address _token, uint _ratio) external onlyOwner {
+	function addVoteToken(address _token, uint _ratio) external onlyOperator {
 		voteRatio[_token] = _ratio;
 		for(uint i = 0; i < voteTokens.length; i++) {
 			if(voteTokens[i] == _token) {
@@ -210,14 +223,18 @@ contract VoteMining is Ownable {
 		tokenLockId = lockId;
 	}
 
-	function addGroup(uint stakingBase, uint startTime, string calldata matchId) external onlyOwner {
+	function setOperator(address operator, bool isOperator) external onlyOwner {
+		operators[operator] = isOperator;
+	}
+
+	function addGroup(uint stakingBase, uint startTime, string calldata matchId) external onlyOperator {
 		currentGroupId++;
 		groups[currentGroupId] = startTime;
 		stakingBases[currentGroupId] = stakingBase;
 		matches[currentGroupId] = matchId;
 	}
 
-	function addNFT(uint groupId, address[] calldata nftAddrs, uint[] calldata nftIds) external onlyOwner {
+	function addNFT(uint groupId, address[] calldata nftAddrs, uint[] calldata nftIds) external onlyOperator {
 		require(nftAddrs.length == nftIds.length, "Invalid params");
 		NFT[] storage inputNFTs = groupNFTs[groupId];
 
@@ -270,11 +287,14 @@ contract VoteMining is Ownable {
 				userVotes[user][date][uid] = userVotes[user][date][uid].add(votes);
 				userDailyVotes[user][currentGroupId][date] = userDailyVotes[user][currentGroupId][date].add(votes);
 				userNFTVotes[user][uid] = userNFTVotes[user][uid].add(votes);
+				
+				nftVotes[uid] = nftVotes[uid].add(votes);
+				groupVotes[currentGroupId] = groupVotes[currentGroupId].add(votes);
 			}
 		}
-		nftVotes[uid] = nftVotes[uid].add(votes);
-		groupVotes[currentGroupId] = groupVotes[currentGroupId].add(votes);
+		
 	}
+
 
 	function _unvote(address user, address nftAddr, uint nftId, uint votes) internal {
 		uint today = getDate(block.timestamp);
@@ -288,14 +308,21 @@ contract VoteMining is Ownable {
 				userVotes[user][date][uid] = userVotes[user][date][uid].sub(votes);
 				userDailyVotes[user][currentGroupId][date] = userDailyVotes[user][currentGroupId][date].sub(votes);
 				userNFTVotes[user][uid] = userNFTVotes[user][uid].sub(votes);
+				
+				nftVotes[uid] = nftVotes[uid].sub(votes);
+				groupVotes[currentGroupId] = groupVotes[currentGroupId].sub(votes);
 			}
 		}
-		nftVotes[uid] = nftVotes[uid].sub(votes);
-		groupVotes[currentGroupId] = groupVotes[currentGroupId].sub(votes);
+		
 	}
 
 	function calcVotes(address token, uint amount) internal view returns(uint256) {
-		return voteRatio[token].mul(amount).div(voteRatioMax);
+		int8 delta = int8(IERC20Metadata(token).decimals()) - int8(IERC20Metadata(uink).decimals());
+		if(delta >= 0) {
+			return voteRatio[token].mul(amount).div(voteRatioMax).div(10 ** uint8(delta));
+		} else {
+			return voteRatio[token].mul(amount).div(voteRatioMax).mul(10 ** uint8(-delta));
+		}
 	}
 
 	function getAvailableBalance(address user, address token, address nftAddr, uint nftId) public view returns(uint256) {
@@ -321,6 +348,7 @@ contract VoteMining is Ownable {
 		_vote(msg.sender, nftAddr, nftId, votes);
 
 		IERC20(token).transferFrom(msg.sender, address(this), amount);
+		groupTokenBalances[currentGroupId][msg.sender][token] = groupTokenBalances[currentGroupId][msg.sender][token].add(amount);
 
 		uint uid = nfts[nftAddr][nftId];
 
@@ -349,6 +377,9 @@ contract VoteMining is Ownable {
 		_unvote(msg.sender, nftAddr, nftId, votes);
 
 		IERC20(token).transfer(msg.sender, amount);
+
+		groupTokenBalances[currentGroupId][msg.sender][token] = groupTokenBalances[currentGroupId][msg.sender][token].sub(amount);
+
 		uint uid = nfts[nftAddr][nftId];
 		Balance storage balance = balances[msg.sender][token][uid];
 		if(getDate(balance.votedAt) < getDate(block.timestamp)) {
@@ -356,6 +387,19 @@ contract VoteMining is Ownable {
 			balance.freezed = 0;
 		}
 		balance.available = balance.available.sub(amount);
+	}
+
+	// redeem token after vote finished
+	function redeemToken(uint groupId, address token) external {
+		require(groups[groupId] + 7 days < block.timestamp, "Vote is not over");
+		uint amount = groupTokenBalances[groupId][msg.sender][token];
+		require(amount > 0, "Amount is zero");
+		IERC20(token).transfer(msg.sender, amount);
+		emit Redeem(msg.sender, token, amount);
+	}
+
+	function rescueToken(address token, uint amount) external onlyOwner {
+		IERC20(token).transfer(msg.sender, amount);
 	}
 
 	function getTotalRewards(address user) public view returns(uint) {
@@ -554,7 +598,7 @@ contract VoteMining is Ownable {
 		}
 	}
 
-	function setAuctionFinish(uint groupId) external onlyOwner {
+	function setAuctionFinish(uint groupId) external onlyOperator {
 		hasFinished[groupId] = true;
 	}
 
