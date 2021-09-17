@@ -88,6 +88,8 @@
 
 Build completed: QmfKW7oLfxphwVrr7hfyuZZzficMP6m2zUWKBezSpunzBu
 
+## Mumbai-Testnet
+
 Deployed to https://thegraph.com/explorer/subgraph/tuminfei/uniarts-dao
 
 Subgraph endpoints:
@@ -95,6 +97,15 @@ Subgraph endpoints:
 Queries (HTTP):     https://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao
 
 Subscriptions (WS): wss://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao
+
+## Rinkeby Testnet
+
+Deployed to https://thegraph.com/explorer/subgraph/tuminfei/uniarts-dao-rinkeby
+
+Subgraph endpoints:
+Queries (HTTP):     https://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao-rinkeby
+Subscriptions (WS): wss://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao-rinkeby
+
 
 
 # Polygonscan
