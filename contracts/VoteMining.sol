@@ -130,13 +130,9 @@ contract VoteMining is Ownable {
 	// nft uid => bool
 	mapping (uint => bool) public mintRewardsClaimed;
 
-	mapping (address => uint) private userRewards;
-
 	// groupId => user => token => balance
 	mapping (uint => mapping (address => mapping (address => uint))) public groupTokenBalances;
-	
-	
-	
+		
 
 	mapping (address => bool) public operators;
 
@@ -185,12 +181,6 @@ contract VoteMining is Ownable {
 		require(isValid, "Invalid Vote Token");
 		_; 
 	}
-
-	modifier updateReward(address user) {
-		userRewards[user] = getTotalRewards(user);
-		_; 
-	}
-	
 
 	constructor(address _treasury, address _tokenLocker){
 		treasury = ITreasury(_treasury);
@@ -252,6 +242,10 @@ contract VoteMining is Ownable {
 		}
 	}
 
+	function groupNFTsLength(uint groupId) public view returns(uint256) {
+		return groupNFTs[groupId].length;
+	}
+
 	function getAuctionPrices(uint groupId) public view returns(uint[] memory prices, uint totalAmount) {
 		prices = new uint[](groupNFTs[groupId].length);
 		for(uint i = 0; i < groupNFTs[groupId].length; i++) {
@@ -292,9 +286,7 @@ contract VoteMining is Ownable {
 				groupVotes[currentGroupId] = groupVotes[currentGroupId].add(votes);
 			}
 		}
-		
 	}
-
 
 	function _unvote(address user, address nftAddr, uint nftId, uint votes) internal {
 		uint today = getDate(block.timestamp);
@@ -341,7 +333,6 @@ contract VoteMining is Ownable {
 		checkVoteToken(token)
 		checkVotingTime
 		checkNFT(nftAddr, nftId)
-		updateReward(msg.sender)
 	{
 		require(amount > 0, "Amount is zero");
 		uint votes = calcVotes(token, amount);
@@ -366,7 +357,6 @@ contract VoteMining is Ownable {
 		external 
 		checkVoteToken(token)
 		checkNFT(nftAddr, nftId)
-		updateReward(msg.sender)
 	{
 		require(amount > 0, "Amount is zero");
 		
@@ -439,8 +429,8 @@ contract VoteMining is Ownable {
 		return rewards;
 	}
 
-	function getBondedBalance(address user) internal view returns(uint) {
-		uint rewards = userRewards[user];
+	function getBondedBalance(address user) public view returns(uint) {
+		uint rewards = getTotalRewards(user);
 		uint freezedBalance = totalVotedBalances[user].add(unbondedBalances[user]);
 		return rewards > freezedBalance ? rewards.sub(freezedBalance) : 0;
 	}
@@ -459,7 +449,6 @@ contract VoteMining is Ownable {
 		external 
 		checkVotingTime
 		checkNFT(nftAddr, nftId)
-		updateReward(msg.sender)
 	{
 
 		uint amount = ITokenLocker(tokenLocker).subLockForVote(tokenLockId, msg.sender);
@@ -483,7 +472,6 @@ contract VoteMining is Ownable {
 		external 
 		checkVotingTime
 		checkNFT(nftAddr, nftId)
-		updateReward(msg.sender)
 	{
 		uint bondedBalance = getBondedBalance(msg.sender);
 		require(bondedBalance > amount, "Insufficient bonded balance");
@@ -507,7 +495,6 @@ contract VoteMining is Ownable {
 		external 
 		checkVotingTime
 		checkNFT(nftAddr, nftId)
-		updateReward(msg.sender)
 	{
 		uint unvotable = getUnvotableBalance(msg.sender, nftAddr, nftId);
 		require(unvotable > amount, "Insufficient unvotable balance");
@@ -525,10 +512,12 @@ contract VoteMining is Ownable {
 		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].sub(amount);
 	}
 
+	function getUnbondingBalancesLength(address user) public view returns(uint) {
+		return unbondingBalances[user].length;
+	}
 
 	function unbond(uint amount) 
 		external 
-		updateReward(msg.sender)
 	{
 		uint bondedBalance = getBondedBalance(msg.sender);
 		require(bondedBalance > amount, "Insufficient bonded balance");
@@ -546,7 +535,6 @@ contract VoteMining is Ownable {
 
 	function redeemUnbonding(uint index) 
 		external 
-		updateReward(msg.sender)
 	{ 
 		UnbondingBalance storage unbondingBalance = unbondingBalances[msg.sender][index];
 		uint passDays = getDate(block.timestamp).sub(getDate(unbondingBalance.unbondedAt)).div(1 days);
