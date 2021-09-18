@@ -82,3 +82,10 @@ type AuctionBidList @entity {
   bid: BigInt!
   expiryBlock: BigInt!
 }
+
+type AuctionRewardList @entity {
+  id: ID!
+  matchId: String! # string
+  tokenIndex: BigInt!
+  winnerAddress: Bytes! # address
+}
