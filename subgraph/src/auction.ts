@@ -5,7 +5,7 @@ import {
   PlayerBidEvent,
   RewardEvent
 } from "../generated/Auction/Auction"
-import { AuctionList, AuctionBidList } from "../generated/schema"
+import { AuctionList, AuctionBidList, AuctionRewardList } from "../generated/schema"
 
 export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
   let tokenIndex = event.params.tokenIndex
@@ -72,4 +72,17 @@ export function handlePlayerBidEvent(event: PlayerBidEvent): void {
   entity.save()
 }
 
-export function handleRewardEvent(event: RewardEvent): void {}
+export function handleRewardEvent(event: RewardEvent): void {
+  let matchId = event.params.matchId
+  let tokenIndex = event.params.tokenIndex 
+  let id = event.transaction.hash.toHex() + '_' + matchId.toString() + '_' + tokenIndex.toString()
+
+  // Entities only exist after they have been saved to the store;
+  // `null` checks allow to create entities on demand
+  let entity = new AuctionRewardList(id)
+
+  entity.matchId = event.params.matchId
+  entity.tokenIndex = event.params.tokenIndex
+  entity.winnerAddress = event.params.winnerAddress
+  entity.save()
+}

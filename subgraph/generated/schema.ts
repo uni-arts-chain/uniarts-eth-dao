@@ -749,3 +749,62 @@ export class AuctionBidList extends Entity {
   }
 }
 
+export class AuctionRewardList extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save AuctionRewardList entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save AuctionRewardList entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("AuctionRewardList", id.toString(), this);
+  }
+
+  static load(id: string): AuctionRewardList | null {
+    return store.get("AuctionRewardList", id) as AuctionRewardList | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get matchId(): string {
+    let value = this.get("matchId");
+    return value.toString();
+  }
+
+  set matchId(value: string) {
+    this.set("matchId", Value.fromString(value));
+  }
+
+  get tokenIndex(): BigInt {
+    let value = this.get("tokenIndex");
+    return value.toBigInt();
+  }
+
+  set tokenIndex(value: BigInt) {
+    this.set("tokenIndex", Value.fromBigInt(value));
+  }
+
+  get winnerAddress(): Bytes {
+    let value = this.get("winnerAddress");
+    return value.toBytes();
+  }
+
+  set winnerAddress(value: Bytes) {
+    this.set("winnerAddress", Value.fromBytes(value));
+  }
+}
+
+
