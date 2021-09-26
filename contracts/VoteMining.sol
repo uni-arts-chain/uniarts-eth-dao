@@ -25,6 +25,8 @@ interface ITokenLocker {
 contract VoteMining is Ownable {
 	using SafeMath for uint256;
 
+	uint public VOTE_DURATION = 7 days;
+
 	uint public weeklyCap = 50000 * 1e12;
 	uint public dailyVoteRewardCap = weeklyCap / 7 / 4; // 25% of daily cap 
 	uint public dailyMintRewardCap = weeklyCap / 7 / 4; // 25% of daily cap 
@@ -120,7 +122,6 @@ contract VoteMining is Ownable {
 	mapping (address => uint) public unbondedBalances;
 	
 
-	
 	// uid => price
 	mapping (uint => uint) public nftTradedPrices;
 	// user => group => date => bool
@@ -166,7 +167,7 @@ contract VoteMining is Ownable {
 
 	modifier checkVotingTime() { 
 		require(groups[currentGroupId] <= block.timestamp, "Voting is not start");
-		require(groups[currentGroupId].add(7 days) >= block.timestamp, "Voting is over");
+		require(groups[currentGroupId].add(VOTE_DURATION) >= block.timestamp, "Voting is over");
 		_; 
 	}
 
@@ -215,6 +216,10 @@ contract VoteMining is Ownable {
 
 	function setOperator(address operator, bool isOperator) external onlyOwner {
 		operators[operator] = isOperator;
+	}
+
+	function setVoteDuration(uint _duration) external onlyOwner {
+		VOTE_DURATION = _duration;
 	}
 
 	function addGroup(uint stakingBase, uint startTime, string calldata matchId) external onlyOperator {
@@ -381,11 +386,28 @@ contract VoteMining is Ownable {
 
 	// redeem token after vote finished
 	function redeemToken(uint groupId, address token) external {
-		require(groups[groupId] + 7 days < block.timestamp, "Vote is not over");
+		require(groups[groupId] + VOTE_DURATION < block.timestamp, "Vote is not over");
 		uint amount = groupTokenBalances[groupId][msg.sender][token];
 		require(amount > 0, "Amount is zero");
 		IERC20(token).transfer(msg.sender, amount);
 		emit Redeem(msg.sender, token, amount);
+	}
+
+	function getRedeemableBalance(address user, address token) public view returns(uint256) {
+		uint total = 0;
+		for(uint groupId = 1; groupId <= currentGroupId; groupId++){
+			if(groups[groupId] + VOTE_DURATION < block.timestamp) {
+				total = total.add(groupTokenBalances[groupId][user][token]);
+			}
+		}
+		return total;
+	}
+
+	function redeemToken(address token) external {
+		uint total = getRedeemableBalance(msg.sender, token);
+		require(total > 0, "Withdrawable is zero");
+		IERC20(token).transfer(msg.sender, total);
+		emit Redeem(msg.sender, token, total);
 	}
 
 	function rescueToken(address token, uint amount) external onlyOwner {
@@ -516,9 +538,7 @@ contract VoteMining is Ownable {
 		return unbondingBalances[user].length;
 	}
 
-	function unbond(uint amount)
-		external 
-	{
+	function unbond(uint amount) external {
 		uint bondedBalance = getBondedBalance(msg.sender);
 		require(bondedBalance > amount, "Insufficient bonded balance");
 

@@ -81,12 +81,6 @@ describe('VoteMining', () => {
 
   	const uid = await this.VoteMining.nfts(this.MockNFT.address, 1)
 
-
-  	// dayVotes[date][uid]
-		// userVotes[user][date][uid]
-		// userDailyVotes[user][currentGroupId][date]
-		// userNFTVotes[user][uid]
-
   	const dayVotes = await this.VoteMining.dayVotes(this.today, uid)
   	expect(dayVotes.toString()).to.eq(amount.toString())
 
