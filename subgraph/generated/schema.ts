@@ -807,4 +807,171 @@ export class AuctionRewardList extends Entity {
   }
 }
 
+export class TrustMarketplaceOrder extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(
+      id !== null,
+      "Cannot save TrustMarketplaceOrder entity without an ID"
+    );
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save TrustMarketplaceOrder entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("TrustMarketplaceOrder", id.toString(), this);
+  }
+
+  static load(id: string): TrustMarketplaceOrder | null {
+    return store.get(
+      "TrustMarketplaceOrder",
+      id
+    ) as TrustMarketplaceOrder | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get seller(): Bytes {
+    let value = this.get("seller");
+    return value.toBytes();
+  }
+
+  set seller(value: Bytes) {
+    this.set("seller", Value.fromBytes(value));
+  }
+
+  get nft_address(): Bytes {
+    let value = this.get("nft_address");
+    return value.toBytes();
+  }
+
+  set nft_address(value: Bytes) {
+    this.set("nft_address", Value.fromBytes(value));
+  }
+
+  get token_id(): BigInt {
+    let value = this.get("token_id");
+    return value.toBigInt();
+  }
+
+  set token_id(value: BigInt) {
+    this.set("token_id", Value.fromBigInt(value));
+  }
+
+  get price_in_wei(): BigInt {
+    let value = this.get("price_in_wei");
+    return value.toBigInt();
+  }
+
+  set price_in_wei(value: BigInt) {
+    this.set("price_in_wei", Value.fromBigInt(value));
+  }
+
+  get expires_at(): BigInt {
+    let value = this.get("expires_at");
+    return value.toBigInt();
+  }
+
+  set expires_at(value: BigInt) {
+    this.set("expires_at", Value.fromBigInt(value));
+  }
+
+  get is_succ(): BigInt {
+    let value = this.get("is_succ");
+    return value.toBigInt();
+  }
+
+  set is_succ(value: BigInt) {
+    this.set("is_succ", Value.fromBigInt(value));
+  }
+}
+
+export class TrustMarketplaceBid extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save TrustMarketplaceBid entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save TrustMarketplaceBid entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("TrustMarketplaceBid", id.toString(), this);
+  }
+
+  static load(id: string): TrustMarketplaceBid | null {
+    return store.get("TrustMarketplaceBid", id) as TrustMarketplaceBid | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get nft_address(): Bytes {
+    let value = this.get("nft_address");
+    return value.toBytes();
+  }
+
+  set nft_address(value: Bytes) {
+    this.set("nft_address", Value.fromBytes(value));
+  }
+
+  get token_id(): BigInt {
+    let value = this.get("token_id");
+    return value.toBigInt();
+  }
+
+  set token_id(value: BigInt) {
+    this.set("token_id", Value.fromBigInt(value));
+  }
+
+  get bidder(): Bytes {
+    let value = this.get("bidder");
+    return value.toBytes();
+  }
+
+  set bidder(value: Bytes) {
+    this.set("bidder", Value.fromBytes(value));
+  }
+
+  get price_in_wei(): BigInt {
+    let value = this.get("price_in_wei");
+    return value.toBigInt();
+  }
+
+  set price_in_wei(value: BigInt) {
+    this.set("price_in_wei", Value.fromBigInt(value));
+  }
+
+  get expires_at(): BigInt {
+    let value = this.get("expires_at");
+    return value.toBigInt();
+  }
+
+  set expires_at(value: BigInt) {
+    this.set("expires_at", Value.fromBigInt(value));
+  }
+}
+
 

@@ -63,3 +63,52 @@ dataSources:
         - event: RewardEvent(string,uint256,address)
           handler: handleRewardEvent
       file: ./src/auction.ts
+  - kind: ethereum/contract
+    name: TrustMarketplace
+    network: rinkeby
+    source:
+      address: "0x88018509F438422E3254A3c50227Ad54C9E8d4D3"
+      abi: TrustMarketplace
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - BidAccepted
+        - BidCancelled
+        - BidCreated
+        - ChangedFeePerMillion
+        - OrderCancelled
+        - OrderCreated
+        - OrderSuccessful
+        - OrderUpdated
+        - OwnershipTransferred
+        - Paused
+        - Unpaused
+      abis:
+        - name: TrustMarketplace
+          file: ./abis/TrustMarketplace.json
+      eventHandlers:
+        - event: BidAccepted(bytes32)
+          handler: handleBidAccepted
+        - event: BidCancelled(bytes32)
+          handler: handleBidCancelled
+        - event: BidCreated(bytes32,indexed address,indexed uint256,indexed address,uint256,uint256)
+          handler: handleBidCreated
+        - event: ChangedFeePerMillion(uint256)
+          handler: handleChangedFeePerMillion
+        - event: OrderCancelled(bytes32)
+          handler: handleOrderCancelled
+        - event: OrderCreated(bytes32,indexed address,indexed address,indexed uint256,uint256,uint256)
+          handler: handleOrderCreated
+        - event: OrderSuccessful(bytes32,indexed address,uint256)
+          handler: handleOrderSuccessful
+        - event: OrderUpdated(bytes32,uint256,uint256)
+          handler: handleOrderUpdated
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: Paused(address)
+          handler: handlePaused
+        - event: Unpaused(address)
+          handler: handleUnpaused
+      file: ./src/trust_marketplace.ts
