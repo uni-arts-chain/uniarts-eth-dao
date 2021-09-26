@@ -67,6 +67,7 @@ export function handleOrderCreated(event: OrderCreated): void {
   entity.token_id = event.params.assetId
   entity.price_in_wei = event.params.priceInWei
   entity.expires_at = event.params.expiresAt
+  entity.is_succ = BigInt.fromI32(0)
   entity.save()
 }
 
