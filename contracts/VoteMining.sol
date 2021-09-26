@@ -516,7 +516,7 @@ contract VoteMining is Ownable {
 		return unbondingBalances[user].length;
 	}
 
-	function unbond(uint amount) 
+	function unbond(uint amount)
 		external 
 	{
 		uint bondedBalance = getBondedBalance(msg.sender);
