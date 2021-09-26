@@ -89,3 +89,22 @@ type AuctionRewardList @entity {
   tokenIndex: BigInt!
   winnerAddress: Bytes! # address
 }
+
+type TrustMarketplaceOrder @entity {
+  id: ID!
+  seller: Bytes! # address
+  nft_address: Bytes! # address
+  token_id: BigInt!
+  price_in_wei: BigInt!
+  expires_at: BigInt!
+  is_succ: BigInt!
+}
+
+type TrustMarketplaceBid @entity {
+  id: ID!
+  nft_address: Bytes! # address
+  token_id: BigInt!
+  bidder: Bytes! # address
+  price_in_wei: BigInt!
+  expires_at: BigInt!
+}

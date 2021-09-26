@@ -54,7 +54,7 @@
 
 - MysteryBox: 0xA54388d9017CcBbE798C9aF48dd389B11fDd0B7A
 
-- TrustMarketplace: 0xFd9CA9e22bd54260B87834966d26055620aFdbFf
+- TrustMarketplace: 0x88018509F438422E3254A3c50227Ad54C9E8d4D3
 
 - TokenLocker: 0x59eD992BC4403FAF2a83C0D9E2213DF4d8d8Eb86
 
@@ -83,6 +83,11 @@
   Add file to IPFS build/Auction/Auction.wasm
 
                 .. QmfNKKr7eKi9a4pycUc7uECgZLFdUbN3eHu9LqckUN8MhU
+
+  Add file to IPFS build/TrustMarketplace/TrustMarketplace.wasm
+  
+                .. QmThYzp89a18AJSG8edJsA6EcXNEw1zbniNmLHH51vRNQf
+
                 
 ✔ Upload subgraph to IPFS
 
