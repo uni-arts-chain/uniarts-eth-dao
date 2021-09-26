@@ -39,7 +39,7 @@ export function handleBidAccepted(event: BidAccepted): void {
 export function handleBidCancelled(event: BidCancelled): void {}
 
 export function handleBidCreated(event: BidCreated): void {
-  let id = event.params.id
+  let id = event.params.id.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
@@ -57,7 +57,7 @@ export function handleChangedFeePerMillion(event: ChangedFeePerMillion): void {}
 export function handleOrderCancelled(event: OrderCancelled): void {}
 
 export function handleOrderCreated(event: OrderCreated): void {
-  let id = event.params.id
+  let id = event.params.id.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
