@@ -83,6 +83,11 @@
   Add file to IPFS build/Auction/Auction.wasm
 
                 .. QmfNKKr7eKi9a4pycUc7uECgZLFdUbN3eHu9LqckUN8MhU
+
+  Add file to IPFS build/TrustMarketplace/TrustMarketplace.wasm
+  
+                .. QmThYzp89a18AJSG8edJsA6EcXNEw1zbniNmLHH51vRNQf
+
                 
 ✔ Upload subgraph to IPFS
 
