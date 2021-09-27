@@ -15,9 +15,13 @@ describe('VoteMining', () => {
 	beforeEach(async () => {
 		this.Uink = await UINK.new({ from: deployer })
 		this.Treasury = await UinkTreasury.new(this.Uink.address)
+    await this.Uink.transfer(this.Treasury.address, toBN(400000 * 1e12), { from: deployer })
+
 		this.TokenLocker = await TokenLocker.new()
     this.VoteMining = await VoteMining.new(this.Treasury.address, this.TokenLocker.address, { from: admin });
     this.MockNFT = await MockNFT.new();
+    await this.Treasury.addOperator(this.VoteMining.address)
+
     const now = parseInt(new Date().getTime() / 1000)
     this.today = now - now % (24 * 3600)
   });
@@ -70,7 +74,7 @@ describe('VoteMining', () => {
   })
 
 
-  it("stake/unstake/voteBonded/unvoteBonded", async() => {
+  it("stake/unstake/voteBonded/unvoteBonded/unbond/redeemUnbonding", async() => {
   	const groupId = await addGroupAndNFTs()
   	await this.Uink.approve(this.VoteMining.address, constants.MAX_UINT256, { from: deployer })
   	const amount = toBN(100 * 1e12)
@@ -143,6 +147,27 @@ describe('VoteMining', () => {
 
     let rewardRates = await this.VoteMining.getMintRewardsPerNFT(groupId)
     expect(rewardRates.map(a=>a.toString())).to.have.members(['44382647385984437', '55617352614015562'])
+
+
+    const bondedBal = await this.VoteMining.getBondedBalance(deployer)
+    expect(bondedBal.toString()).to.eq('19999999999999992')
+    await this.VoteMining.unbond(bondedBal, {  from: deployer })
+    const bondedBalAfter = await this.VoteMining.getBondedBalance(deployer)
+    expect(bondedBalAfter.toString()).to.eq('0')
+
+    const redeemBeforeBal = await this.Uink.balanceOf(deployer)
+    await time.increase(1 * 24 * 3600 + 1)
+    await this.VoteMining.redeemUnbonding(0, { from: deployer })
+    const redeemAfterBal = await this.Uink.balanceOf(deployer)
+
+    expect(redeemAfterBal.sub(redeemBeforeBal).toString()).to.eq('333333333333333')
+
+
+    const redeemBeforeBal2 = await this.Uink.balanceOf(deployer)
+    await time.increase(59 * 24 * 3600 + 1)
+    await this.VoteMining.redeemUnbonding(0, {  from: deployer })
+    const redeemAfterBal2 = await this.Uink.balanceOf(deployer)
+    expect(redeemAfterBal2.sub(redeemBeforeBal2).toString()).to.eq('19666666666666659')
 
   })
 })
