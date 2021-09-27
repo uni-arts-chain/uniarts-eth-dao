@@ -25,11 +25,12 @@ interface ITokenLocker {
 contract VoteMining is Ownable {
 	using SafeMath for uint256;
 
-	uint public VOTE_DURATION = 7 days;
+	uint public VOTE_DAYS = 14;
+	uint public VOTE_DURATION = VOTE_DAYS * 1 days;
 
-	uint public weeklyCap = 50000 * 1e12;
-	uint public dailyVoteRewardCap = weeklyCap / 7 / 4; // 25% of daily cap 
-	uint public dailyMintRewardCap = weeklyCap / 7 / 4; // 25% of daily cap 
+	uint public weeklyCap = 400000 * 1e12;
+	uint public dailyVoteRewardCap = weeklyCap / VOTE_DAYS / 4; // 25% of daily cap 
+	uint public mintRewardCap = weeklyCap / 4; // 25% of daily cap 
 	uint public bonusCap = weeklyCap  / 2; // 50% of weekly cap
 	// group id => amount
 	mapping (uint => uint) public stakingBases;
@@ -110,7 +111,7 @@ contract VoteMining is Ownable {
 	mapping (address => mapping (address => mapping (uint => Balance))) public balances;
 
 	// user => uid => Balance
-	mapping (address => mapping (uint => Balance)) public votedBalances; // bonded voted balance
+	mapping (address => mapping (uint => Balance)) public votedBalances; // bonded => voted 
 	
 	// user => bonded amount
 	mapping (address => uint) public totalVotedBalances;
@@ -218,11 +219,12 @@ contract VoteMining is Ownable {
 		operators[operator] = isOperator;
 	}
 
-	function setVoteDuration(uint _duration) external onlyOwner {
-		VOTE_DURATION = _duration;
+	function setVoteDays(uint _days) external onlyOwner {
+		VOTE_DAYS = _days;
 	}
 
 	function addGroup(uint stakingBase, uint startTime, string calldata matchId) external onlyOperator {
+		require(startTime >= getDate(block.timestamp), "Invalid start time");
 		currentGroupId++;
 		groups[currentGroupId] = startTime;
 		stakingBases[currentGroupId] = stakingBase;
@@ -234,6 +236,7 @@ contract VoteMining is Ownable {
 		NFT[] storage inputNFTs = groupNFTs[groupId];
 
 		for(uint i = 0; i < nftAddrs.length; i++) {
+			require(nfts[nftAddrs[i]][nftIds[i]] == 0, "NFT has been added");
 			nextNFTId++;
 			nfts[nftAddrs[i]][nftIds[i]] = nextNFTId;
 			address nftOwner = IERC721(nftAddrs[i]).ownerOf(nftIds[i]);
@@ -267,9 +270,9 @@ contract VoteMining is Ownable {
 
 	function getVotableDates(uint groupId) public view returns(uint[] memory dates) {
 		uint start = groups[groupId];
-		dates = new uint[](7);
+		dates = new uint[](VOTE_DAYS);
 		uint firstDate = getDate(start);
-		for(uint i = 0; i < 7; i++) {
+		for(uint i = 0; i < VOTE_DAYS; i++) {
 			dates[i] = firstDate.add(i * 24 * 60 * 60);
 		}
 	}
@@ -496,7 +499,7 @@ contract VoteMining is Ownable {
 		checkNFT(nftAddr, nftId)
 	{
 		uint bondedBalance = getBondedBalance(msg.sender);
-		require(bondedBalance > amount, "Insufficient bonded balance");
+		require(bondedBalance >= amount, "Insufficient bonded balance");
 
 		_vote(msg.sender, nftAddr, nftId, amount);
 
@@ -519,7 +522,7 @@ contract VoteMining is Ownable {
 		checkNFT(nftAddr, nftId)
 	{
 		uint unvotable = getUnvotableBalance(msg.sender, nftAddr, nftId);
-		require(unvotable > amount, "Insufficient unvotable balance");
+		require(unvotable >= amount, "Insufficient unvotable balance");
 		_unvote(msg.sender, nftAddr, nftId, amount);
 
 		uint uid = nfts[nftAddr][nftId];
@@ -540,7 +543,7 @@ contract VoteMining is Ownable {
 
 	function unbond(uint amount) external {
 		uint bondedBalance = getBondedBalance(msg.sender);
-		require(bondedBalance > amount, "Insufficient bonded balance");
+		require(bondedBalance >= amount, "Insufficient bonded balance");
 
 		unbondingBalances[msg.sender].push(UnbondingBalance({
 			value: amount,
@@ -688,7 +691,7 @@ contract VoteMining is Ownable {
 		mintRewards = new uint[](groupNFTs[groupId].length);
 		for(uint i = 0; i < groupNFTs[groupId].length; i++) {
 			if(groupVotes[groupId] > 0) {
-				mintRewards[i] = nftVotes[groupNFTs[groupId][i].uid].mul(dailyMintRewardCap).div(groupVotes[groupId]);
+				mintRewards[i] = nftVotes[groupNFTs[groupId][i].uid].mul(mintRewardCap).div(groupVotes[groupId]);
 			}
 		}
 	}

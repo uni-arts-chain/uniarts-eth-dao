@@ -70,7 +70,7 @@ describe('VoteMining', () => {
   })
 
 
-  it("stake", async() => {
+  it("stake/unstake/voteBonded/unvoteBonded", async() => {
   	const groupId = await addGroupAndNFTs()
   	await this.Uink.approve(this.VoteMining.address, constants.MAX_UINT256, { from: deployer })
   	const amount = toBN(100 * 1e12)
@@ -88,11 +88,61 @@ describe('VoteMining', () => {
   	expect(userVotes.toString()).to.eq(amount.toString())
 
   	const userNFTVotes = await this.VoteMining.userNFTVotes(deployer, uid)
-  	expect(userNFTVotes.toString()).to.eq(amount.mul(toBN(7)).toString())
+  	expect(userNFTVotes.toString()).to.eq(amount.mul(toBN(14)).toString())
 
-  	await time.increase(24 * 3600 + 1)
+  	await time.increase(1 * 24 * 3600 + 1)
   	const bal2 = await this.VoteMining.getAvailableBalance(deployer, this.Uink.address, this.MockNFT.address, 1)
   	expect(bal2.toString()).to.eq(amount.toString())
+
+
+    await this.VoteMining.unstake(this.MockNFT.address, 1, this.Uink.address, toBN(20 * 1e12), {  from: deployer })
+    const bal3 = await this.VoteMining.getAvailableBalance(deployer, this.Uink.address, this.MockNFT.address, 1)
+    expect(bal3.toString()).to.eq(toBN(80 * 1e12).toString())
+
+
+
+    const bondedBalance = await this.VoteMining.getBondedBalance(deployer)
+    expect(bondedBalance.toString()).to.eq('1428571428571428')
+
+    await this.VoteMining.voteBonded(this.MockNFT.address, 2, toBN('1428571428571428'), { from: deployer })
+    const bondedBalance2 = await this.VoteMining.getBondedBalance(deployer)
+    expect(bondedBalance2.toString()).to.eq('0')
+
+    let unvotableBalance1 = await this.VoteMining.getUnvotableBalance(deployer, this.MockNFT.address, 2)
+    expect(unvotableBalance1.toString()).to.eq('0')
+
+    await time.increase(1 * 24 * 3600 + 1)
+    const bondedBalance3 = await this.VoteMining.getBondedBalance(deployer)
+    expect(bondedBalance3.toString()).to.eq('1428571428571428')
+
+    let unvotableBalance = await this.VoteMining.getUnvotableBalance(deployer, this.MockNFT.address, 2)
+    expect(unvotableBalance.toString()).to.eq('1428571428571428')
+
+
+    await this.VoteMining.unvoteBonded(this.MockNFT.address, 2, toBN('1428571428571428'), { from: deployer })
+    let unvotableBalance3 = await this.VoteMining.getUnvotableBalance(deployer, this.MockNFT.address, 2)
+    expect(unvotableBalance3.toString()).to.eq('0')
+
+    let bondedTokens = await this.VoteMining.getBondedBalance(deployer)
+    expect(bondedTokens.toString()).to.eq(toBN(1428571428571428 * 2).toString())
+
+
+    let noRedeems = await this.VoteMining.getRedeemableBalance(deployer, this.Uink.address)
+    expect(noRedeems.toString()).to.eq('0')
+
+    await time.increase(12 * 24 * 3600 + 1)
+    let redeems = await this.VoteMining.getRedeemableBalance(deployer, this.Uink.address)
+    expect(redeems.toString()).to.eq(toBN(80 * 1e12).toString())
+
+    let balanceBefore = await this.Uink.balanceOf(deployer)
+    await this.VoteMining.redeemToken(this.Uink.address, { from: deployer })
+    let balanceAfter = await this.Uink.balanceOf(deployer)
+    expect(balanceAfter.sub(balanceBefore).toString()).to.eq(toBN(80 * 1e12).toString())
+
+    const uid2 = await this.VoteMining.nfts(this.MockNFT.address, 2)
+
+    let rewardRates = await this.VoteMining.getMintRewardsPerNFT(groupId)
+    expect(rewardRates.map(a=>a.toString())).to.have.members(['44382647385984437', '55617352614015562'])
 
   })
 })
