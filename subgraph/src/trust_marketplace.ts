@@ -71,7 +71,15 @@ export function handleOrderCreated(event: OrderCreated): void {
   entity.save()
 }
 
-export function handleOrderSuccessful(event: OrderSuccessful): void {}
+export function handleOrderSuccessful(event: OrderSuccessful): void {
+  let id = event.params.id.toHex()
+
+  // Entities only exist after they have been saved to the store;
+  // `null` checks allow to create entities on demand
+  let entity = TrustMarketplaceOrder.load(id)
+  entity.is_succ = BigInt.fromI32(1)
+  entity.save()
+}
 
 export function handleOrderUpdated(event: OrderUpdated): void {}
 
