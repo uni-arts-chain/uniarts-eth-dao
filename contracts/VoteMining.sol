@@ -224,6 +224,7 @@ contract VoteMining is Ownable {
 	}
 
 	function addGroup(uint stakingBase, uint startTime, string calldata matchId) external onlyOperator {
+		require(currentGroupId == 0 || groups[currentGroupId].add(VOTE_DURATION) <= block.timestamp, "Previous group is not over.");
 		require(startTime >= getDate(block.timestamp), "Invalid start time");
 		currentGroupId++;
 		groups[currentGroupId] = startTime;
@@ -257,7 +258,10 @@ contract VoteMining is Ownable {
 	function getAuctionPrices(uint groupId) public view returns(uint[] memory prices, uint totalAmount) {
 		prices = new uint[](groupNFTs[groupId].length);
 		for(uint i = 0; i < groupNFTs[groupId].length; i++) {
-			(, uint price) = IAuction(auction).matchResults(matches[groupId], i);
+			(address bidder, uint price) = IAuction(auction).matchResults(matches[groupId], i);
+			if(bidder == address(0)) {
+				price = 0;
+			}
 			prices[i] = price;
 			totalAmount = totalAmount.add(price);
 		}

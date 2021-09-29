@@ -60,6 +60,15 @@ describe('VoteMining', () => {
   	expect(groupId.toNumber()).to.eq(1)
   	const startTime = await this.VoteMining.groups(groupId)
   	expect(startTime.toNumber()).to.eq(this.today)
+
+    const now = parseInt(new Date().getTime() / 1000)
+    const date = now - now % (24 * 3600)
+    const matchId = "1"
+
+    await expectRevert(
+      this.VoteMining.addGroup(toBN(50000 * 1e12), date, matchId, { from: admin }),
+      "Previous group is not over."
+    );
   })
 
   it("addNFT", async() => {
