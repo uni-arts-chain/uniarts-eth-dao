@@ -142,7 +142,37 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
         for(uint i = 0; i < nfts.length; ++i) {
             emit CreateAuctionEvent(msg.sender, matchId, openBlock, expiryBlock, minIncrement, expiryExtension, i, nfts[i]);
         }
+    }
+
+    function addAuctionNFT(
+        string memory matchId,
+        NFT memory nft) external nonReentrant {
+
+        // check if matchId is existence
+        require(matches[matchId].creatorAddress != ADDRESS_NULL, "matchId non-existent");
+
+        Match storage amatch = matches[matchId];
+        uint32 nftCount = amatch.nftCount;
         
+        // check item count
+        require(amatch.nftCount < MAX_ITEM_PER_AUCTION, "number of nft must be greater than 0 and less than MAX_ITEM_PER_AUCTION");
+
+        // deposit item to contract
+        require(nft.minBid > 1, "minBid must be greater than 1");
+        require(amatch.minIncrement * nft.minBid / 100 > 0, "increment should be greater than 0");
+        
+        // if meet requirements then send tokens to contract
+        IERC721(nft.contractAddress).safeTransferFrom(msg.sender, address(this), nft.tokenId);
+        
+        // create slots for items
+        matchResults[matchId][nftCount] = AuctionResult(ADDRESS_NULL, nft.minBid);
+        matchNFTs[matchId][nftCount]    = nft;
+
+        // update match
+        amatch.nftCount = uint32(nftCount + 1);
+        // emit events
+        // reateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, uint tokenIndex, NFT nfts);
+        emit CreateAuctionEvent(msg.sender, matchId, amatch.openBlock, amatch.expiryBlock, amatch.minIncrement, amatch.expiryExtension, nftCount, nft);
     }
 
     function player_bid(string memory matchId, uint tokenIndex, uint amount) external nonReentrant validTokenIndex(matchId, tokenIndex) {
