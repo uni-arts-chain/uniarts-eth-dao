@@ -3,17 +3,20 @@ const { expect } = require('chai');
 const { toBN } = require('web3-utils');
 const { BN, expectEvent, expectRevert, time, constants, balance } = require('@openzeppelin/test-helpers');
 
-const [ admin, user1, user2, deployer ] = accounts;
+const [ admin, user1, user2, deployer, voter1, voter2 ] = accounts;
 
 const VoteMining = contract.fromArtifact('VoteMining');
 const UINK = contract.fromArtifact('UINK');
+const USDT = contract.fromArtifact('USDT');
 const UinkTreasury = contract.fromArtifact('UinkTreasury');
 const TokenLocker = contract.fromArtifact('TokenLocker');
 const MockNFT = contract.fromArtifact('MockNFT');
+const Auction = contract.fromArtifact('Auction');
 
 describe('VoteMining', () => {
 	beforeEach(async () => {
 		this.Uink = await UINK.new({ from: deployer })
+    this.USDT = await USDT.new({ from: deployer })
 		this.Treasury = await UinkTreasury.new(this.Uink.address)
     await this.Uink.transfer(this.Treasury.address, toBN(400000 * 1e12), { from: deployer })
 
@@ -22,12 +25,18 @@ describe('VoteMining', () => {
     this.MockNFT = await MockNFT.new();
     await this.Treasury.addOperator(this.VoteMining.address)
 
+    this.Auction = await Auction.new(this.USDT.address)
+
+    await this.VoteMining.setAuctionAddress(this.Auction.address, { from: admin })
+
     const now = parseInt(new Date().getTime() / 1000)
     this.today = now - now % (24 * 3600)
   });
 
+
   const addGroup = async() => {
-  	const now = parseInt(new Date().getTime() / 1000)
+  	let now = await time.latest()
+    now = now.toNumber()
   	const date = now - now % (24 * 3600)
   	const matchId = "1"
   	await this.VoteMining.addGroup(toBN(50000 * 1e12), date, matchId, { from: admin })
@@ -37,13 +46,37 @@ describe('VoteMining', () => {
 
   const addGroupAndNFTs = async() => {
   	const groupId = await addGroup()
-  	await this.MockNFT.mint(user1, 1)
-  	await this.MockNFT.mint(user2, 2)
+  	await this.MockNFT.mint(deployer, 1)
+  	await this.MockNFT.mint(deployer, 2)
   	const nftAddrs = [ this.MockNFT.address, this.MockNFT.address ]
   	const nftIds = [ 1, 2 ]
   	await this.VoteMining.addNFT(groupId, nftAddrs, nftIds, { from: admin })
+
+    const matchId = "1"
+    let openBlock = await time.latestBlock()
+    openBlock = openBlock.add(toBN(10))
+    const expiryBlock = openBlock.add(toBN(1000))
+    const nfts = [
+      [
+        this.MockNFT.address,
+        1,
+        toBN(10 * 1e18),
+        toBN(100 * 1e18)
+      ],
+      [
+        this.MockNFT.address,
+        2,
+        toBN(20 * 1e18),
+        toBN(200 * 1e18)
+      ]
+    ]
+    await this.MockNFT.approve(this.Auction.address, 1, { from: deployer })
+    await this.MockNFT.approve(this.Auction.address, 2, { from: deployer })
+    await this.Auction.createAuction(matchId, openBlock, expiryBlock, 10, 1, nfts, { from: deployer })
+
   	return groupId
   }
+
 
   it('constructor', async() => {
   	expect(true).to.be.true
@@ -179,4 +212,52 @@ describe('VoteMining', () => {
     expect(redeemAfterBal2.sub(redeemBeforeBal2).toString()).to.eq('19666666666666659')
 
   })
+
+  it("getAuctionRewardRates/getAuctionRewards", async() => {
+    const groupId = await addGroupAndNFTs()
+
+    const amount1 = toBN(200 * 1e12)
+    const amount2 = toBN(100 * 1e12)
+
+    await this.Uink.transfer(voter1, amount1, { from: deployer })
+    await this.Uink.transfer(voter2, amount2, { from: deployer })
+    await this.Uink.approve(this.VoteMining.address, constants.MAX_UINT256, { from: voter1 })
+    await this.Uink.approve(this.VoteMining.address, constants.MAX_UINT256, { from: voter2 })
+    await this.VoteMining.stake(this.MockNFT.address, 1, this.Uink.address, amount1, { from: voter1 })
+    await this.VoteMining.stake(this.MockNFT.address, 2, this.Uink.address, amount2, { from: voter2 })
+
+    await time.increase(14 * 24 * 3600 + 1)
+
+    // const result = await this.VoteMining.getWeightsAndInflations(groupId)
+    // console.log(result.inflations.map(a=>a.toString()))
+
+    const price1 = toBN(15 * 1e18)
+    const price2 = toBN(25 * 1e18)
+    await this.USDT.transfer(user1, price1, { from: deployer })
+    await this.USDT.transfer(user2, price2, { from: deployer })
+    await this.USDT.approve(this.Auction.address, constants.MAX_UINT256, { from: user1 })
+    await this.USDT.approve(this.Auction.address, constants.MAX_UINT256, { from: user2 })
+
+    let openBlock = await time.latestBlock()
+    openBlock = openBlock.add(toBN(10))
+    await time.advanceBlockTo(openBlock)
+
+    await this.Auction.player_bid("1", 0, price1, { from: user1 })
+    await this.Auction.player_bid("1", 1, price2, { from: user2 })
+
+    const rates = await this.VoteMining.getAuctionRewardRates(groupId)
+    expect(rates.map(a=>a.toString())).to.have.members([
+      '5357142857142857142',
+      '17857142857142857142'
+    ])
+
+    await this.VoteMining.setAuctionFinish(groupId, { from: admin })
+    const rewards1 = await this.VoteMining.getAuctionRewards(voter1, groupId)
+    const rewards2 = await this.VoteMining.getAuctionRewards(voter2, groupId)
+
+    expect(rewards1.toString()).to.eq('14999999999999999')
+    expect(rewards2.toString()).to.eq('24999999999999999')
+  })
+
+  
 })
