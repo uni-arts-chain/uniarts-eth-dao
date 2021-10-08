@@ -699,4 +699,13 @@ contract VoteMining is Ownable {
 			}
 		}
 	}
+
+	function getMintRewards(address nftAddr, uint nftId) public view returns(uint) {
+		uint groupId = nftGroup[nfts[nftAddr][nftId]];
+		if(groupVotes[groupId] > 0) {
+			return nftVotes[nfts[nftAddr][nftId]].mul(mintRewardCap).div(groupVotes[groupId]);
+		} else {
+			return 0;
+		}
+	}
 }
