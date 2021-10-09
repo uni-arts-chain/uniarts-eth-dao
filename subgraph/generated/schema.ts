@@ -888,6 +888,15 @@ export class TrustMarketplaceOrder extends Entity {
     this.set("expires_at", Value.fromBigInt(value));
   }
 
+  get tx_hash(): string {
+    let value = this.get("tx_hash");
+    return value.toString();
+  }
+
+  set tx_hash(value: string) {
+    this.set("tx_hash", Value.fromString(value));
+  }
+
   get is_succ(): BigInt {
     let value = this.get("is_succ");
     return value.toBigInt();
@@ -935,6 +944,15 @@ export class TrustMarketplaceBid extends Entity {
 
   set nft_address(value: Bytes) {
     this.set("nft_address", Value.fromBytes(value));
+  }
+
+  get tx_hash(): string {
+    let value = this.get("tx_hash");
+    return value.toString();
+  }
+
+  set tx_hash(value: string) {
+    this.set("tx_hash", Value.fromString(value));
   }
 
   get token_id(): BigInt {
