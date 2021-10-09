@@ -41,6 +41,7 @@ export function handleBidCancelled(event: BidCancelled): void {}
 export function handleBidCreated(event: BidCreated): void {
   let id = event.params.id.toHex()
   let tx_hash = event.transaction.hash.toHex()
+  let block_number = event.block.number
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
@@ -51,6 +52,7 @@ export function handleBidCreated(event: BidCreated): void {
   entity.price_in_wei = event.params.priceInWei
   entity.expires_at = event.params.expiresAt
   entity.tx_hash = tx_hash
+  entity.block_number = block_number
   entity.save()
 }
 

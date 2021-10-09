@@ -964,6 +964,15 @@ export class TrustMarketplaceBid extends Entity {
     this.set("token_id", Value.fromBigInt(value));
   }
 
+  get block_number(): BigInt {
+    let value = this.get("block_number");
+    return value.toBigInt();
+  }
+
+  set block_number(value: BigInt) {
+    this.set("block_number", Value.fromBigInt(value));
+  }
+
   get bidder(): Bytes {
     let value = this.get("bidder");
     return value.toBytes();
