@@ -226,7 +226,7 @@ contract TrustMarketplace is Ownable, Pausable, FeeManager, ITrustMarketplace, E
      * @param _priceInWei - Bid price in acceptedToken currency
      * @param _expiresAt - Bid expiration time
      */
-    function createPlaceBid(
+    function createBid(
         address _nftAddress,
         uint256 _assetId,
         uint256 _priceInWei,
