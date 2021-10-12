@@ -25,8 +25,9 @@ interface ITokenLocker {
 contract VoteMining is Ownable {
 	using SafeMath for uint256;
 
+	uint public VOTE_TIME_UNIT = 1 days;
 	uint public VOTE_DAYS = 14;
-	uint public VOTE_DURATION = VOTE_DAYS * 1 days;
+	uint public VOTE_DURATION = VOTE_DAYS * VOTE_TIME_UNIT;
 
 	uint public weeklyCap = 400000 * 1e12;
 	uint public dailyVoteRewardCap = weeklyCap / VOTE_DAYS / 4; // 25% of daily cap 
@@ -223,6 +224,7 @@ contract VoteMining is Ownable {
 		VOTE_DAYS = _days;
 	}
 
+
 	function addGroup(uint stakingBase, uint startTime, string calldata matchId) external onlyOperator {
 		require(currentGroupId == 0 || groups[currentGroupId].add(VOTE_DURATION) <= block.timestamp, "Previous group is not over.");
 		require(startTime >= getDate(block.timestamp), "Invalid start time");
@@ -268,8 +270,8 @@ contract VoteMining is Ownable {
 	}
 
 	
-	function getDate(uint256 ts) public pure returns(uint256) {
-		return ts.sub(ts.mod(1 days));
+	function getDate(uint256 ts) public view returns(uint256) {
+		return ts.sub(ts.mod(VOTE_TIME_UNIT));
 	}
 
 	function getVotableDates(uint groupId) public view returns(uint[] memory dates) {
@@ -277,7 +279,7 @@ contract VoteMining is Ownable {
 		dates = new uint[](VOTE_DAYS);
 		uint firstDate = getDate(start);
 		for(uint i = 0; i < VOTE_DAYS; i++) {
-			dates[i] = firstDate.add(i * 24 * 60 * 60);
+			dates[i] = firstDate.add(i * VOTE_TIME_UNIT);
 		}
 	}
 
@@ -564,7 +566,7 @@ contract VoteMining is Ownable {
 		external 
 	{ 
 		UnbondingBalance storage unbondingBalance = unbondingBalances[msg.sender][index];
-		uint passDays = getDate(block.timestamp).sub(getDate(unbondingBalance.unbondedAt)).div(1 days);
+		uint passDays = getDate(block.timestamp).sub(getDate(unbondingBalance.unbondedAt)).div(VOTE_TIME_UNIT);
 		uint released = passDays.mul(unbondingBalance.value).div(60);
 		uint available = released.sub(unbondingBalance.redeemed);
 		unbondingBalance.redeemed = released;
