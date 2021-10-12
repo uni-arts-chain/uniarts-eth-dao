@@ -111,6 +111,9 @@ contract VoteMining is Ownable {
 	// user => token => uid => Balance
 	mapping (address => mapping (address => mapping (uint => Balance))) public balances;
 
+	// user => token => balance
+	mapping (address => mapping (address => uint)) public userTokenBalances;
+
 	// user => uid => Balance
 	mapping (address => mapping (uint => Balance)) public votedBalances; // bonded => voted 
 	
@@ -346,7 +349,6 @@ contract VoteMining is Ownable {
 				groupVotes[currentGroupId] = groupVotes[currentGroupId].sub(votes);
 			}
 		}
-		
 	}
 
 	function calcVotes(address token, uint amount) internal view returns(uint256) {
@@ -392,6 +394,8 @@ contract VoteMining is Ownable {
 		}
 		balance.freezed = balance.freezed.add(amount);
 		balance.votedAt = block.timestamp;
+
+		userTokenBalances[msg.sender][token] = userTokenBalances[msg.sender][token].add(amount);
 	}
 
 	function unstake(address nftAddr, uint nftId, address token, uint amount)
@@ -418,6 +422,8 @@ contract VoteMining is Ownable {
 			balance.freezed = 0;
 		}
 		balance.available = balance.available.sub(amount);
+
+		userTokenBalances[msg.sender][token] = userTokenBalances[msg.sender][token].sub(amount);
 	}
 
 	// redeem token after vote finished
@@ -523,6 +529,8 @@ contract VoteMining is Ownable {
 		votedBalance.votedAt = block.timestamp;
 
 		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].add(amount);
+
+		userTokenBalances[msg.sender][uink] = userTokenBalances[msg.sender][uink].add(amount);
 	}
 
 	
@@ -547,6 +555,7 @@ contract VoteMining is Ownable {
 		votedBalance.votedAt = block.timestamp;
 
 		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].add(amount);
+		userTokenBalances[msg.sender][uink] = userTokenBalances[msg.sender][uink].add(amount);
 	}
 
 	function unvoteBonded(address nftAddr, uint nftId, uint amount)
@@ -568,6 +577,7 @@ contract VoteMining is Ownable {
 		votedBalance.available = votedBalance.available.sub(amount);
 
 		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].sub(amount);
+		userTokenBalances[msg.sender][uink] = userTokenBalances[msg.sender][uink].sub(amount);
 	}
 
 	function getUnbondingBalancesLength(address user) public view returns(uint) {
