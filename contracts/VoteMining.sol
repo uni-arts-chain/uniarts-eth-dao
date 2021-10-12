@@ -25,7 +25,7 @@ interface ITokenLocker {
 contract VoteMining is Ownable {
 	using SafeMath for uint256;
 
-	uint public VOTE_TIME_UNIT = 1 days;
+	uint public VOTE_TIME_UNIT = 1 hours;
 	uint public VOTE_DAYS = 14;
 	uint public VOTE_DURATION = VOTE_DAYS * VOTE_TIME_UNIT;
 
@@ -300,6 +300,33 @@ contract VoteMining is Ownable {
 				groupVotes[currentGroupId] = groupVotes[currentGroupId].add(votes);
 			}
 		}
+	}
+
+	function getUserNFTVotes(address user, address nftAddr, uint nftId) public view returns(uint256) {
+		uint today = getDate(block.timestamp);
+		uint[] memory dates = getVotableDates(currentGroupId);
+		uint uid = nfts[nftAddr][nftId];
+		uint votes = 0;
+		for(uint i = 0; i < dates.length; i++) {
+			if(dates[i] <= today) {
+				votes = votes.add(userVotes[user][dates[i]][uid]);
+			}
+		}
+		return votes;
+	}
+
+	function getNFTVotes(address nftAddr, uint nftId) public view returns(uint256) {
+		uint today = getDate(block.timestamp);
+		uint[] memory dates = getVotableDates(currentGroupId);
+		uint uid = nfts[nftAddr][nftId];
+		
+		uint votes = 0;
+		for(uint i = 0; i < dates.length; i++) {
+			if(dates[i] <= today) {
+				votes = votes.add(dayVotes[dates[i]][uid]);
+			}
+		}
+		return votes;
 	}
 
 	function _unvote(address user, address nftAddr, uint nftId, uint votes) internal {
