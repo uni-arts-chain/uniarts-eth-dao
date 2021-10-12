@@ -226,6 +226,29 @@ contract TrustMarketplace is Ownable, Pausable, FeeManager, ITrustMarketplace, E
      * @param _priceInWei - Bid price in acceptedToken currency
      * @param _expiresAt - Bid expiration time
      */
+    function createBid(
+        address _nftAddress,
+        uint256 _assetId,
+        uint256 _priceInWei,
+        uint256 _expiresAt
+    )
+        public whenNotPaused
+    {
+        _createBid(
+            _nftAddress,
+            _assetId,
+            _priceInWei,
+            _expiresAt
+        );
+    }
+
+    /**
+     * @dev Places a bid for a published NFT and checks for the asset fingerprint
+     * @param _nftAddress - Address of the NFT registry
+     * @param _assetId - ID of the published NFT
+     * @param _priceInWei - Bid price in acceptedToken currency
+     * @param _expiresAt - Bid expiration time
+     */
     function safePlaceBid(
         address _nftAddress,
         uint256 _assetId,
@@ -239,6 +262,34 @@ contract TrustMarketplace is Ownable, Pausable, FeeManager, ITrustMarketplace, E
             _assetId,
             _priceInWei,
             _expiresAt
+        );
+
+        Order memory order = _getValidOrder(_nftAddress, _assetId);
+
+        Bid memory bid = bidByOrderId[_nftAddress][_assetId];
+
+        // remove bid
+        delete bidByOrderId[_nftAddress][_assetId];
+
+        emit BidAccepted(bid.id);
+
+        // calc market fees
+        uint256 saleShareAmount = bid.price
+            .mul(FeeManager.cutPerMillion)
+            .div(1e6);
+
+        // transfer escrowed bid amount minus market fee to seller
+        acceptedToken.safeTransfer(
+            order.seller,
+            bid.price.sub(saleShareAmount)
+        );
+
+        _executeOrder(
+            order.id,
+            bid.bidder,
+            _nftAddress,
+            _assetId,
+            _priceInWei
         );
     }
 
@@ -308,7 +359,7 @@ contract TrustMarketplace is Ownable, Pausable, FeeManager, ITrustMarketplace, E
 
         // transfer escrowed bid amount minus market fee to seller
         acceptedToken.safeTransfer(
-            bid.bidder,
+            order.seller,
             bid.price.sub(saleShareAmount)
         );
 

@@ -40,6 +40,8 @@ export function handleBidCancelled(event: BidCancelled): void {}
 
 export function handleBidCreated(event: BidCreated): void {
   let id = event.params.id.toHex()
+  let tx_hash = event.transaction.hash.toHex()
+  let block_number = event.block.number
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
@@ -49,6 +51,8 @@ export function handleBidCreated(event: BidCreated): void {
   entity.token_id = event.params.assetId
   entity.price_in_wei = event.params.priceInWei
   entity.expires_at = event.params.expiresAt
+  entity.tx_hash = tx_hash
+  entity.block_number = block_number
   entity.save()
 }
 
@@ -58,6 +62,7 @@ export function handleOrderCancelled(event: OrderCancelled): void {}
 
 export function handleOrderCreated(event: OrderCreated): void {
   let id = event.params.id.toHex()
+  let tx_hash = event.transaction.hash.toHex()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
@@ -68,16 +73,20 @@ export function handleOrderCreated(event: OrderCreated): void {
   entity.price_in_wei = event.params.priceInWei
   entity.expires_at = event.params.expiresAt
   entity.is_succ = BigInt.fromI32(0)
+  entity.succ_block_number = BigInt.fromI32(0)
+  entity.tx_hash = tx_hash
   entity.save()
 }
 
 export function handleOrderSuccessful(event: OrderSuccessful): void {
   let id = event.params.id.toHex()
+  let block_number = event.block.number
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
   let entity = TrustMarketplaceOrder.load(id)
   entity.is_succ = BigInt.fromI32(1)
+  entity.succ_block_number = block_number
   entity.save()
 }
 

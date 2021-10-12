@@ -98,6 +98,8 @@ type TrustMarketplaceOrder @entity {
   price_in_wei: BigInt!
   expires_at: BigInt!
   is_succ: BigInt!
+  succ_block_number: BigInt!
+  tx_hash: String! # tx_hash
 }
 
 type TrustMarketplaceBid @entity {
@@ -107,4 +109,6 @@ type TrustMarketplaceBid @entity {
   bidder: Bytes! # address
   price_in_wei: BigInt!
   expires_at: BigInt!
+  tx_hash: String! # tx_hash
+  block_number: BigInt!
 }

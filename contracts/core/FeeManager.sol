@@ -9,7 +9,7 @@ contract FeeManager is Ownable {
 
     // Market fee on sales
     uint256 public cutPerMillion;
-    uint256 public constant maxCutPerMillion = 100000; // 10% cut
+    uint256 public constant maxCutPerMillion = 200000; // 20% cut
 
     /**
      * @dev Sets the share cut for the owner of the contract that's
