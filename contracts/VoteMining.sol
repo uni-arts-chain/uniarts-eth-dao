@@ -14,7 +14,7 @@ interface ITreasury {
 }
 
 interface IAuction {
-	function matchResults(string calldata matchId, uint index) external view returns(address, uint);
+	function matchResults(string calldata matchId, uint index) external view returns(address, uint, uint);
 }
 
 interface ITokenLocker {
@@ -227,6 +227,9 @@ contract VoteMining is Ownable {
 		VOTE_DAYS = _days;
 	}
 
+	function setMatchId(uint groupId, string calldata matchId) external onlyOperator {
+		matches[groupId] = matchId;
+	}
 
 	function addGroup(uint stakingBase, uint startTime, string calldata matchId) external onlyOperator {
 		require(currentGroupId == 0 || groups[currentGroupId].add(VOTE_DURATION) <= block.timestamp, "Previous group is not over.");
@@ -263,7 +266,7 @@ contract VoteMining is Ownable {
 	function getAuctionPrices(uint groupId) public view returns(uint[] memory prices, uint totalAmount) {
 		prices = new uint[](groupNFTs[groupId].length);
 		for(uint i = 0; i < groupNFTs[groupId].length; i++) {
-			(address bidder, uint price) = IAuction(auction).matchResults(matches[groupId], i);
+			(address bidder, , uint price) = IAuction(auction).matchResults(matches[groupId], i);
 			if(bidder == address(0)) {
 				price = 0;
 			}
