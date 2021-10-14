@@ -266,10 +266,7 @@ contract VoteMining is Ownable {
 	function getAuctionPrices(uint groupId) public view returns(uint[] memory prices, uint totalAmount) {
 		prices = new uint[](groupNFTs[groupId].length);
 		for(uint i = 0; i < groupNFTs[groupId].length; i++) {
-			(address bidder, , uint price) = IAuction(auction).matchResults(matches[groupId], i);
-			if(bidder == address(0)) {
-				price = 0;
-			}
+			(,, uint price) = IAuction(auction).matchResults(matches[groupId], i);
 			prices[i] = price;
 			totalAmount = totalAmount.add(price);
 		}
