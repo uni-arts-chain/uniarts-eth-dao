@@ -34,6 +34,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
     struct AuctionResult {
         address topBidder;
         uint standingBid;
+        uint finalBid;
     }
 
     struct Match {
@@ -123,7 +124,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
             IERC721(nfts[i].contractAddress).safeTransferFrom(msg.sender, address(this), nfts[i].tokenId);
             
             // create slots for items
-            matchResults[matchId][i]    = AuctionResult(ADDRESS_NULL, nfts[i].minBid);
+            matchResults[matchId][i]    = AuctionResult(ADDRESS_NULL, nfts[i].minBid, 0);
             matchNFTs[matchId][i]       = nfts[i];
         }
 
@@ -165,7 +166,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
         IERC721(nft.contractAddress).safeTransferFrom(msg.sender, address(this), nft.tokenId);
         
         // create slots for items
-        matchResults[matchId][nftCount] = AuctionResult(ADDRESS_NULL, nft.minBid);
+        matchResults[matchId][nftCount] = AuctionResult(ADDRESS_NULL, nft.minBid, 0);
         matchNFTs[matchId][nftCount]    = nft;
 
         // update match
@@ -195,7 +196,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
         );
 
         // update the winner for that token
-        matchResults[matchId][tokenIndex] = AuctionResult(playerAddress, amount);
+        matchResults[matchId][tokenIndex] = AuctionResult(playerAddress, amount, amount);
     
         // if in BLOCKS_TO_EXPIRE blocks then extends the auction expiry time
         if (amatch.expiryBlock - block.number < BLOCKS_TO_EXPIRE) {
@@ -231,7 +232,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
         require(fixedPrice > standingBid, "Standingbid has exceeded the fixedPrice");
 
         // update the winner for that token
-        matchResults[matchId][tokenIndex] = AuctionResult(playerAddress, fixedPrice);
+        matchResults[matchId][tokenIndex] = AuctionResult(playerAddress, fixedPrice, fixedPrice);
     
         // if in BLOCKS_TO_EXPIRE blocks then extends the auction expiry time
         if (amatch.expiryBlock - block.number < BLOCKS_TO_EXPIRE) {
@@ -352,10 +353,11 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
 
     function _win_audit(string memory matchId, uint tokenIndex) internal returns (bool) {
         address winnerAddress  = matchResults[matchId][tokenIndex].topBidder;
+        uint finalBid  = matchResults[matchId][tokenIndex].finalBid;
         require(winnerAddress != ADDRESS_NULL, "winner is not valid");
 
         // set result to null
-        matchResults[matchId][tokenIndex] = AuctionResult(ADDRESS_NULL, 0);
+        matchResults[matchId][tokenIndex] = AuctionResult(ADDRESS_NULL, 0, finalBid);
 
         // increase creator's balance
         uint standingBid = playerBid[matchId][winnerAddress][tokenIndex];
