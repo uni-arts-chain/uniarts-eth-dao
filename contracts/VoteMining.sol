@@ -601,16 +601,6 @@ contract VoteMining is Ownable {
 		require(sent == available, "Insufficient treasury balance");
 	}
 
-
-	// function getUserVotesByNFT(address user, uint groupId, uint uid) public view returns(uint) {
-	// 	uint[] memory dates = getVotableDates(groupId);
-	// 	uint votes = 0;
-	// 	for(uint i = 0; i < dates.length; i++) {
-	// 		votes = userVotes[user][dates[i]][uid].add(votes);
-	// 	}
-	// 	return votes;
-	// }
-
 	function claimMintRewards(address nftAddr, uint nftId, address to) external onlyPin {
 		uint uid = nfts[nftAddr][nftId];
 		uint groupId = nftGroup[nfts[nftAddr][nftId]];
