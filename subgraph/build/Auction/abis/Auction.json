@@ -225,6 +225,11 @@
         "internalType": "uint256",
         "name": "standingBid",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "finalBid",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -330,6 +335,46 @@
       }
     ],
     "name": "createAuction",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "matchId",
+        "type": "string"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "contractAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBid",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fixedPrice",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Auction.NFT",
+        "name": "nft",
+        "type": "tuple"
+      }
+    ],
+    "name": "addAuctionNFT",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -32,6 +32,14 @@
 
 - TokenLocker: 0x507BDe03A87a6aA134d16634545E3D79c11c137D
 
+- UniartsNFT: 0x2A14626662DC305d048156F33D414DA046148081
+
+- USDT: 0xc2132D05D31c914a87C6611C10748AEb04B58e8F
+
+- Auction: 0xCE7c240079CC64bA531612dADfD086841427855C
+
+- TrustMarketplace: 0x144D738944Ea127479b3E79fB90C8ccF4E98093C
+
 ### Rinkeby Testnet
 
 - UART: 0xf51D9714b74644a224E7f62E56D4A87e1f1fb2E0
@@ -93,7 +101,7 @@
 
 Build completed: QmfKW7oLfxphwVrr7hfyuZZzficMP6m2zUWKBezSpunzBu
 
-## Mumbai-Testnet
+## Matic Mainnet
 
 Deployed to https://thegraph.com/explorer/subgraph/tuminfei/uniarts-dao
 
