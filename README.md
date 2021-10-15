@@ -101,7 +101,7 @@
 
 Build completed: QmfKW7oLfxphwVrr7hfyuZZzficMP6m2zUWKBezSpunzBu
 
-## Mumbai-Testnet
+## Matic Mainnet
 
 Deployed to https://thegraph.com/explorer/subgraph/tuminfei/uniarts-dao
 
