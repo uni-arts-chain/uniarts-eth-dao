@@ -117,8 +117,11 @@ contract VoteMining is Ownable {
 	// user => uid => Balance
 	mapping (address => mapping (uint => Balance)) public votedBalances; // bonded => voted 
 	
-	// user => bonded amount
+	// user => voted amount
 	mapping (address => uint) public totalVotedBalances;
+
+	// user => bonded amount
+	mapping (address => uint) public bondedBalances;
 
 	// user => UnbondingBalance[]
 	mapping (address => UnbondingBalance[]) public unbondingBalances;
@@ -494,9 +497,9 @@ contract VoteMining is Ownable {
 	}
 
 	function getBondedBalance(address user) public view returns(uint) {
-		uint rewards = getTotalRewards(user);
+		uint balance = getTotalRewards(user).add(bondedBalances[user]);
 		uint freezedBalance = totalVotedBalances[user].add(unbondedBalances[user]);
-		return rewards > freezedBalance ? rewards.sub(freezedBalance) : 0;
+		return balance > freezedBalance ? balance.sub(freezedBalance) : 0;
 	}
 
 	function getUnvotableBalance(address user, address nftAddr, uint nftId) public view returns(uint256) {
@@ -509,27 +512,11 @@ contract VoteMining is Ownable {
 		return available;
 	}
 
-	function voteFromLock(address nftAddr, uint nftId) 
+	function collectFromLock(uint lockId) 
 		external 
-		checkVotingTime
-		checkNFT(nftAddr, nftId)
 	{
-
-		uint amount = ITokenLocker(tokenLocker).subLockForVote(tokenLockId, msg.sender);
-		_vote(msg.sender, nftAddr, nftId, amount);
-		
-		uint uid = nfts[nftAddr][nftId];
-		Balance storage votedBalance = votedBalances[msg.sender][uid];
-
-		if(getDate(votedBalance.votedAt) < getDate(block.timestamp)) {
-			votedBalance.available = votedBalance.available.add(votedBalance.freezed);
-			votedBalance.freezed = 0;
-		}
-		votedBalance.freezed = votedBalance.freezed.add(amount);
-		votedBalance.votedAt = block.timestamp;
-
-		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].add(amount);
-
+		uint amount = ITokenLocker(tokenLocker).subLockForVote(lockId, msg.sender);
+		bondedBalances[msg.sender] = bondedBalances[msg.sender].add(amount);
 		userTokenBalances[msg.sender][uink] = userTokenBalances[msg.sender][uink].add(amount);
 	}
 
@@ -604,11 +591,14 @@ contract VoteMining is Ownable {
 	{ 
 		UnbondingBalance storage unbondingBalance = unbondingBalances[msg.sender][index];
 		uint passDays = getDate(block.timestamp).sub(getDate(unbondingBalance.unbondedAt)).div(VOTE_TIME_UNIT);
+		if(passDays > 60) {
+			passDays = 60;
+		}
 		uint released = passDays.mul(unbondingBalance.value).div(60);
 		uint available = released.sub(unbondingBalance.redeemed);
 		unbondingBalance.redeemed = released;
-
-		treasury.sendRewards(msg.sender, available);
+		uint sent = treasury.sendRewards(msg.sender, available);
+		require(sent == available, "Insufficient treasury balance");
 	}
 
 
