@@ -66,6 +66,9 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
     event CreateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, uint tokenIndex, NFT nfts);
     event PlayerBidEvent(string matchId, address playerAddress, uint tokenIndex, uint bid, uint96 expiryBlock);
     event RewardEvent(string matchId, uint tokenIndex, address winnerAddress);
+    event PlayerWithdrawBid(string matchId, uint tokenIndex);
+    event ProcessWithdrawNft(string matchId, uint tokenIndex);
+    event CreatorWithdrawProfit(address creatorAddress, uint256 balance);
 
     // base erc20 token
     address public USDT_ADDRESS;
@@ -90,6 +93,7 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
     }
 
     constructor(address usdtContractAddress) {
+        require(usdtContractAddress != address(0), "usdtContractAddress should not be address(0)");
         USDT_ADDRESS = usdtContractAddress;
     }
 
@@ -148,6 +152,8 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
     function addAuctionNFT(
         string memory matchId,
         NFT memory nft) external nonReentrant {
+
+        require(matches[matchId].expiryBlock >= block.number, "the match is finished");
 
         // check if matchId is existence
         require(matches[matchId].creatorAddress != ADDRESS_NULL, "matchId non-existent");
@@ -273,6 +279,10 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
 
         // transfer money
         IERC20(USDT_ADDRESS).safeTransfer(playerAddress, amount); // auto reverts on error
+
+        // emit events
+        // event PlayerWithdrawBid(string matchId, uint tokenIndex);
+        emit PlayerWithdrawBid(matchId, tokenIndex);
     }
 
     // anyone can call reward, top bidder and creator are incentivized to call this function to send rewards/profit
@@ -286,6 +296,10 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
         // transfer asset
         NFT memory nft = matchNFTs[matchId][tokenIndex];
         IERC721(nft.contractAddress).safeTransferFrom(address(this), msg.sender, nft.tokenId);
+
+        // emit events
+        // event ProcessWithdrawNft(string matchId, uint tokenIndex);
+        emit ProcessWithdrawNft(matchId, tokenIndex);
     }
 
     // creator withdraws unused nft
@@ -320,6 +334,9 @@ contract Auction is ReentrancyGuard, IERC721Receiver {
         
         // send money
         IERC20(USDT_ADDRESS).safeTransfer(msg.sender, balance);
+        // emit events
+        // event CreatorWithdrawProfit(address creatorAddress, uint256 balance);
+        emit CreatorWithdrawProfit(msg.sender, balance);
     }
 
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) external override pure returns (bytes4) {
