@@ -6,8 +6,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
 interface ITreasury {
@@ -24,18 +22,17 @@ interface ITokenLocker {
 }
 
 
-contract VoteMiningV2 is Ownable, ReentrancyGuard {
+contract VoteMining is Ownable {
 	using SafeMath for uint256;
-	using SafeERC20 for IERC20;
 
 	uint public VOTE_TIME_UNIT = 1 days;
 	uint public VOTE_DAYS = 14;
 	uint public VOTE_DURATION = VOTE_DAYS * VOTE_TIME_UNIT;
 
 	uint public weeklyCap = 400000 * 1e12;
-	uint public dailyVoteRewardCap = weeklyCap / 4 / VOTE_DAYS; // 1/14 of 25% of group cap 
-	uint public mintRewardCap = weeklyCap / 4; // 25% of group cap 
-	uint public bonusCap = weeklyCap  / 2; // 50% of group cap
+	uint public dailyVoteRewardCap = weeklyCap / VOTE_DAYS / 4; // 25% of daily cap 
+	uint public mintRewardCap = weeklyCap / 4; // 25% of daily cap 
+	uint public bonusCap = weeklyCap  / 2; // 50% of weekly cap
 	// group id => amount
 	mapping (uint => uint) public stakingBases;
 
@@ -52,7 +49,7 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	}
 	// id => start time
 	mapping (uint => uint) public groups;
-	uint public currentGroupId = 1; // V2 starts from 1
+	uint public currentGroupId = 0;
 	// group id => matchId
 	mapping (uint => string) public matches;
 	// group id => finished or not
@@ -154,16 +151,10 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 
 	address public tokenLocker;
 
-	event AddGroup(uint groupId, uint stakingBase, uint startTime, string matchId);
-	event AddNFT(uint groupId, address nftAddr, uint nftId, uint uid);
-	event Redeem(address indexed user, uint groupId, address token, uint amount);
-	event RedeemUnbonding(address indexed user, uint index, uint amount);
+	event Redeem(address indexed user, address token, uint amount);
 	event Unbond(address indexed user, uint amount, uint at);
-	event Stake(address indexed user, address nftAddr, uint nftId, address token, uint amount);
-	event Unstake(address indexed user, address nftAddr, uint nftId, address token, uint amount);
-	event VoteBonded(address indexed user, address nftAddr, uint nftId, uint amount);
-	event UnvoteBonded(address indexed user, address nftAddr, uint nftId, uint amount);
-	event MintRewardsClaimed(address nftAddr, uint nftId, address to);
+
+	
 
 	modifier checkNFT(address nftAddr, uint nftId) { 
 		require(nfts[nftAddr][nftId] > 0, "Invalid NFT");
@@ -201,8 +192,6 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	}
 
 	constructor(address _treasury, address _tokenLocker){
-		require(_treasury != address(0), "_treasury is zero address");
-		require(_tokenLocker != address(0), "_tokenLocker is zero address");
 		treasury = ITreasury(_treasury);
 		uink = treasury.uink();
 		tokenLocker = _tokenLocker;
@@ -246,20 +235,16 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	}
 
 	function addGroup(uint stakingBase, uint startTime, string calldata matchId) external onlyOperator {
-		require(currentGroupId == 1 || groups[currentGroupId].add(VOTE_DURATION) <= block.timestamp, "Previous group is not over.");
+		require(currentGroupId == 0 || groups[currentGroupId].add(VOTE_DURATION) <= block.timestamp, "Previous group is not over.");
 		require(startTime >= getDate(block.timestamp), "Invalid start time");
 		currentGroupId++;
 		groups[currentGroupId] = startTime;
 		stakingBases[currentGroupId] = stakingBase;
 		matches[currentGroupId] = matchId;
-
-		emit AddGroup(currentGroupId, stakingBase, startTime, matchId);
 	}
 
 	function addNFT(uint groupId, address[] calldata nftAddrs, uint[] calldata nftIds) external onlyOperator {
 		require(nftAddrs.length == nftIds.length, "Invalid params");
-		require(groups[groupId] > block.timestamp, "Voting has started");
-
 		NFT[] storage inputNFTs = groupNFTs[groupId];
 
 		for(uint i = 0; i < nftAddrs.length; i++) {
@@ -274,8 +259,6 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 				owner: nftOwner
 			}));
 			nftGroup[nextNFTId] = groupId;
-
-			emit AddNFT(groupId, nftAddrs[i], nftIds[i], nextNFTId);
 		}
 	}
 
@@ -396,13 +379,12 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 		checkVoteToken(token)
 		checkVotingTime
 		checkNFT(nftAddr, nftId)
-		nonReentrant
 	{
 		require(amount > 0, "Amount is zero");
 		uint votes = calcVotes(token, amount);
 		_vote(msg.sender, nftAddr, nftId, votes);
 
-		IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+		IERC20(token).transferFrom(msg.sender, address(this), amount);
 		groupTokenBalances[currentGroupId][msg.sender][token] = groupTokenBalances[currentGroupId][msg.sender][token].add(amount);
 
 		uint uid = nfts[nftAddr][nftId];
@@ -417,16 +399,12 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 		balance.votedAt = block.timestamp;
 
 		userTokenBalances[msg.sender][token] = userTokenBalances[msg.sender][token].add(amount);
-
-		emit Stake(msg.sender, nftAddr, nftId, token, amount);
-
 	}
 
 	function unstake(address nftAddr, uint nftId, address token, uint amount)
 		external 
 		checkVoteToken(token)
 		checkNFT(nftAddr, nftId)
-		nonReentrant
 	{
 		require(amount > 0, "Amount is zero");
 		
@@ -436,7 +414,7 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 		uint votes = calcVotes(token, amount);
 		_unvote(msg.sender, nftAddr, nftId, votes);
 
-		IERC20(token).safeTransfer(msg.sender, amount);
+		IERC20(token).transfer(msg.sender, amount);
 
 		groupTokenBalances[currentGroupId][msg.sender][token] = groupTokenBalances[currentGroupId][msg.sender][token].sub(amount);
 
@@ -449,31 +427,21 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 		balance.available = balance.available.sub(amount);
 
 		userTokenBalances[msg.sender][token] = userTokenBalances[msg.sender][token].sub(amount);
-
-		emit Unstake(msg.sender, nftAddr, nftId, token, amount);
 	}
 
 	// redeem token after vote finished
-	function redeemToken(uint groupId, address token) public {
+	function redeemToken(uint groupId, address token) external {
 		require(groups[groupId] + VOTE_DURATION < block.timestamp, "Vote is not over");
 		uint amount = groupTokenBalances[groupId][msg.sender][token];
 		require(amount > 0, "Amount is zero");
 		groupTokenBalances[groupId][msg.sender][token] = 0;
-		IERC20(token).safeTransfer(msg.sender, amount);
-		emit Redeem(msg.sender, groupId, token, amount);
-	}
-
-	function redeemTokenAll(address token) external {
-		for(uint groupId = 2; groupId <= currentGroupId; groupId++){
-			if(groups[groupId] + VOTE_DURATION < block.timestamp) {
-				redeemToken(groupId, token);
-			}
-		}
+		IERC20(token).transfer(msg.sender, amount);
+		emit Redeem(msg.sender, token, amount);
 	}
 
 	function getRedeemableBalance(address user, address token) public view returns(uint256) {
 		uint total = 0;
-		for(uint groupId = 2; groupId <= currentGroupId; groupId++){
+		for(uint groupId = 1; groupId <= currentGroupId; groupId++){
 			if(groups[groupId] + VOTE_DURATION < block.timestamp) {
 				total = total.add(groupTokenBalances[groupId][user][token]);
 			}
@@ -482,7 +450,7 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	}
 
 	function rescueToken(address token, uint amount) external onlyOwner {
-		IERC20(token).safeTransfer(msg.sender, amount);
+		IERC20(token).transfer(msg.sender, amount);
 	}
 
 	function getTotalRewards(address user) public view returns(uint) {
@@ -569,8 +537,6 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 
 		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].add(amount);
 		userTokenBalances[msg.sender][uink] = userTokenBalances[msg.sender][uink].add(amount);
-
-		emit VoteBonded(msg.sender, nftAddr, nftId, amount);
 	}
 
 	function unvoteBonded(address nftAddr, uint nftId, uint amount)
@@ -593,8 +559,6 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 
 		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].sub(amount);
 		userTokenBalances[msg.sender][uink] = userTokenBalances[msg.sender][uink].sub(amount);
-
-		emit UnvoteBonded(msg.sender, nftAddr, nftId, amount);
 	}
 
 	function getUnbondingBalancesLength(address user) public view returns(uint) {
@@ -629,8 +593,6 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 		unbondingBalance.redeemed = released;
 		uint sent = treasury.sendRewards(msg.sender, available);
 		require(sent == available, "Insufficient treasury balance");
-
-		emit RedeemUnbonding(msg.sender, index, sent);
 	}
 
 	function claimMintRewards(address nftAddr, uint nftId, address to) external onlyPin {
@@ -649,8 +611,6 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 			treasury.sendRewards(to, rewards);
 			mintRewardsClaimed[uid] = true;
 		}
-
-		emit MintRewardsClaimed(nftAddr, nftId, to);
 	}
 
 	function getTradeWeights(uint groupId) public view returns(uint[] memory weights) {
