@@ -23,8 +23,12 @@ interface ITokenLocker {
 	function subLockForVote(uint256 lockId, address accountAddress) external returns(uint);
 }
 
+interface IVoteMiningV1 {
+	function getBondedBalance(address user) external view returns(uint);
+}
 
-contract VoteMiningV2 is Ownable, ReentrancyGuard {
+
+contract VoteMining is Ownable, ReentrancyGuard {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
@@ -97,7 +101,11 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	mapping (address => uint) public voteRatio;
 
 	uint public voteRatioMax = 10000;
+
+	mapping (address => bool) migrated;
 	
+	
+	address internal v1;
 
 	struct Balance {
 		uint available;
@@ -223,6 +231,10 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 
 	function setAuctionAddress(address _auction) external onlyOwner {
 		auction = _auction;
+	}
+
+	function setV1Address(address _v1) external onlyOwner {
+		v1 = _v1;
 	}
 
 	function setPinAddress(address _pin) external onlyOwner {
@@ -760,5 +772,15 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 		} else {
 			return 0;
 		}
+	}
+
+	function migrate() external {
+		require(!migrated[msg.sender], "Already migrated");
+		uint amount = IVoteMiningV1(v1).getBondedBalance(msg.sender);
+		require(amount > 0, "No bonded balance");
+		bondedBalances[msg.sender] = bondedBalances[msg.sender].add(amount);
+		userTokenBalances[msg.sender][uink] = userTokenBalances[msg.sender][uink].add(amount);
+		treasury.sendRewards(address(this), amount);
+		migrated[msg.sender] = true;
 	}
 }

@@ -22,7 +22,7 @@ interface ITokenLocker {
 }
 
 
-contract VoteMining is Ownable {
+contract VoteMiningV0 is Ownable {
 	using SafeMath for uint256;
 
 	uint public VOTE_TIME_UNIT = 1 days;
