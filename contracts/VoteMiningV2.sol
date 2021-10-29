@@ -154,13 +154,16 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 
 	address public tokenLocker;
 
-	event Redeem(address indexed user, address token, uint amount);
+	event AddGroup(uint groupId, uint stakingBase, uint startTime, string matchId);
+	event AddNFT(uint groupId, address nftAddr, uint nftId, uint uid);
+	event Redeem(address indexed user, uint groupId, address token, uint amount);
+	event RedeemUnbonding(address indexed user, uint index, uint amount);
 	event Unbond(address indexed user, uint amount, uint at);
 	event Stake(address indexed user, address nftAddr, uint nftId, address token, uint amount);
 	event Unstake(address indexed user, address nftAddr, uint nftId, address token, uint amount);
 	event VoteBonded(address indexed user, address nftAddr, uint nftId, uint amount);
 	event UnvoteBonded(address indexed user, address nftAddr, uint nftId, uint amount);
-	
+	event MintRewardsClaimed(address nftAddr, uint nftId, address to);
 
 	modifier checkNFT(address nftAddr, uint nftId) { 
 		require(nfts[nftAddr][nftId] > 0, "Invalid NFT");
@@ -249,6 +252,8 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 		groups[currentGroupId] = startTime;
 		stakingBases[currentGroupId] = stakingBase;
 		matches[currentGroupId] = matchId;
+
+		emit AddGroup(currentGroupId, stakingBase, startTime, matchId);
 	}
 
 	function addNFT(uint groupId, address[] calldata nftAddrs, uint[] calldata nftIds) external onlyOperator {
@@ -269,6 +274,8 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 				owner: nftOwner
 			}));
 			nftGroup[nextNFTId] = groupId;
+
+			emit AddNFT(groupId, nftAddrs[i], nftIds[i], nextNFTId);
 		}
 	}
 
@@ -447,18 +454,26 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	}
 
 	// redeem token after vote finished
-	function redeemToken(uint groupId, address token) external {
+	function redeemToken(uint groupId, address token) public {
 		require(groups[groupId] + VOTE_DURATION < block.timestamp, "Vote is not over");
 		uint amount = groupTokenBalances[groupId][msg.sender][token];
 		require(amount > 0, "Amount is zero");
 		groupTokenBalances[groupId][msg.sender][token] = 0;
 		IERC20(token).safeTransfer(msg.sender, amount);
-		emit Redeem(msg.sender, token, amount);
+		emit Redeem(msg.sender, groupId, token, amount);
+	}
+
+	function redeemTokenAll(address token) external {
+		for(uint groupId = 2; groupId <= currentGroupId; groupId++){
+			if(groups[groupId] + VOTE_DURATION < block.timestamp) {
+				redeemToken(groupId, token);
+			}
+		}
 	}
 
 	function getRedeemableBalance(address user, address token) public view returns(uint256) {
 		uint total = 0;
-		for(uint groupId = 1; groupId <= currentGroupId; groupId++){
+		for(uint groupId = 2; groupId <= currentGroupId; groupId++){
 			if(groups[groupId] + VOTE_DURATION < block.timestamp) {
 				total = total.add(groupTokenBalances[groupId][user][token]);
 			}
@@ -554,6 +569,8 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 
 		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].add(amount);
 		userTokenBalances[msg.sender][uink] = userTokenBalances[msg.sender][uink].add(amount);
+
+		emit VoteBonded(msg.sender, nftAddr, nftId, amount);
 	}
 
 	function unvoteBonded(address nftAddr, uint nftId, uint amount)
@@ -576,6 +593,8 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 
 		totalVotedBalances[msg.sender] = totalVotedBalances[msg.sender].sub(amount);
 		userTokenBalances[msg.sender][uink] = userTokenBalances[msg.sender][uink].sub(amount);
+
+		emit UnvoteBonded(msg.sender, nftAddr, nftId, amount);
 	}
 
 	function getUnbondingBalancesLength(address user) public view returns(uint) {
@@ -610,6 +629,8 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 		unbondingBalance.redeemed = released;
 		uint sent = treasury.sendRewards(msg.sender, available);
 		require(sent == available, "Insufficient treasury balance");
+
+		emit RedeemUnbonding(msg.sender, index, sent);
 	}
 
 	function claimMintRewards(address nftAddr, uint nftId, address to) external onlyPin {
@@ -628,6 +649,8 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 			treasury.sendRewards(to, rewards);
 			mintRewardsClaimed[uid] = true;
 		}
+
+		emit MintRewardsClaimed(nftAddr, nftId, to);
 	}
 
 	function getTradeWeights(uint groupId) public view returns(uint[] memory weights) {

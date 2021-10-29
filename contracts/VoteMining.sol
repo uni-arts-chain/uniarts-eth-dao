@@ -434,6 +434,7 @@ contract VoteMining is Ownable {
 		require(groups[groupId] + VOTE_DURATION < block.timestamp, "Vote is not over");
 		uint amount = groupTokenBalances[groupId][msg.sender][token];
 		require(amount > 0, "Amount is zero");
+		groupTokenBalances[groupId][msg.sender][token] = 0;
 		IERC20(token).transfer(msg.sender, amount);
 		emit Redeem(msg.sender, token, amount);
 	}
@@ -446,13 +447,6 @@ contract VoteMining is Ownable {
 			}
 		}
 		return total;
-	}
-
-	function redeemToken(address token) external {
-		uint total = getRedeemableBalance(msg.sender, token);
-		require(total > 0, "Withdrawable is zero");
-		IERC20(token).transfer(msg.sender, total);
-		emit Redeem(msg.sender, token, total);
 	}
 
 	function rescueToken(address token, uint amount) external onlyOwner {
