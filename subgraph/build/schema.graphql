@@ -60,6 +60,7 @@ type TokenTransaction @entity {
 
 type AuctionList @entity {
   id: ID!
+  contractAddress: String! # string
   count: BigInt!
   creatorAddress: Bytes! # address
   matchId: String! # string
@@ -76,6 +77,7 @@ type AuctionList @entity {
 
 type AuctionBidList @entity {
   id: ID!
+  contractAddress: String! # string
   matchId: String! # string
   playerAddress: Bytes! # address
   tokenIndex: BigInt!
@@ -85,6 +87,7 @@ type AuctionBidList @entity {
 
 type AuctionRewardList @entity {
   id: ID!
+  contractAddress: String! # string
   matchId: String! # string
   tokenIndex: BigInt!
   winnerAddress: Bytes! # address
