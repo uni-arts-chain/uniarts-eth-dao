@@ -582,13 +582,13 @@ export class AuctionList extends Entity {
     this.set("creatorAddress", Value.fromBytes(value));
   }
 
-  get contractAddress(): Bytes {
+  get contractAddress(): string {
     let value = this.get("contractAddress");
-    return value.toBytes();
+    return value.toString();
   }
 
-  set contractAddress(value: Bytes) {
-    this.set("contractAddress", Value.fromBytes(value));
+  set contractAddress(value: string) {
+    this.set("contractAddress", Value.fromString(value));
   }
 
   get matchId(): string {
@@ -712,13 +712,13 @@ export class AuctionBidList extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get contractAddress(): Bytes {
+  get contractAddress(): string {
     let value = this.get("contractAddress");
-    return value.toBytes();
+    return value.toString();
   }
 
-  set contractAddress(value: Bytes) {
-    this.set("contractAddress", Value.fromBytes(value));
+  set contractAddress(value: string) {
+    this.set("contractAddress", Value.fromString(value));
   }
 
   get matchId(): string {
@@ -797,13 +797,13 @@ export class AuctionRewardList extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get contractAddress(): Bytes {
+  get contractAddress(): string {
     let value = this.get("contractAddress");
-    return value.toBytes();
+    return value.toString();
   }
 
-  set contractAddress(value: Bytes) {
-    this.set("contractAddress", Value.fromBytes(value));
+  set contractAddress(value: string) {
+    this.set("contractAddress", Value.fromString(value));
   }
 
   get matchId(): string {
