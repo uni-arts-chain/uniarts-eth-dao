@@ -192,10 +192,9 @@ contract AuctionV2 is ReentrancyGuard, IERC721Receiver {
         uint    nftMinBid       = matchNFTs[matchId][tokenIndex].minBid;
         uint    increment       = nftMinBid * amatch.minIncrement / 100;
         
-        // check valid amount (> current wining, not doubled value compare to standing bid, sender someone different from winner)
+        // check valid amount (> current wining, sender someone different from winner)
         // known issue: Auction creator should be aware of the case where stadingBid = 1 and min increment >= 1
         require(
-            amount < 2 * standingBid && 
             amount > standingBid && 
             amount - standingBid >= increment, 
             "illegal increment"
