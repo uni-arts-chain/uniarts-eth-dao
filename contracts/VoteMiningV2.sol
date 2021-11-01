@@ -30,11 +30,11 @@ interface IVoteMiningV1 {
 }
 
 
-contract VoteMining is Ownable, ReentrancyGuard {
+contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
-	uint public VOTE_TIME_UNIT = 1 days;
+	uint public VOTE_TIME_UNIT = 1 hours;
 	uint public VOTE_DAYS = 14;
 	uint public VOTE_DURATION = VOTE_DAYS * VOTE_TIME_UNIT;
 
@@ -321,6 +321,9 @@ contract VoteMining is Ownable, ReentrancyGuard {
 	}
 
 	function _vote(address user, address nftAddr, uint nftId, uint votes) internal {
+		if(groups[currentGroupId].add(VOTE_DURATION) < block.timestamp) {
+			return;
+		}
 		uint today = getDate(block.timestamp);
 		uint[] memory dates = getVotableDates(currentGroupId);
 		uint uid = nfts[nftAddr][nftId];
@@ -367,6 +370,9 @@ contract VoteMining is Ownable, ReentrancyGuard {
 	}
 
 	function _unvote(address user, address nftAddr, uint nftId, uint votes) internal {
+		if(groups[currentGroupId].add(VOTE_DURATION) < block.timestamp) {
+			return;
+		}
 		uint today = getDate(block.timestamp);
 		uint[] memory dates = getVotableDates(currentGroupId);
 		uint uid = nfts[nftAddr][nftId];

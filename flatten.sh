@@ -1,6 +1,7 @@
 npx truffle-flattener contracts/ERC20/UINK.sol > flatten/UINK.sol
 npx truffle-flattener contracts/UinkTreasury.sol > flatten/UinkTreasury.sol
 npx truffle-flattener contracts/VoteMining.sol > flatten/VoteMining.sol
+npx truffle-flattener contracts/VoteMiningV2.sol > flatten/VoteMiningV2.sol
 npx truffle-flattener contracts/Pin.sol > flatten/Pin.sol
 npx truffle-flattener contracts/ERC721/UniArtsNFT.sol > flatten/UniArtsNFT.sol
 npx truffle-flattener contracts/core/Marketplace.sol > flatten/Marketplace.sol

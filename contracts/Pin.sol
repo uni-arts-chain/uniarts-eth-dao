@@ -11,7 +11,8 @@ interface IVoteMining {
 contract Pin is Ownable {
   using SafeMath for uint256;
 
-  address public voteMining;
+  address public voteMiningV1;
+  address public voteMiningV2;
 
   mapping(address => uint256) public balanceOf;
   mapping(address => mapping(uint256 => address)) public ownerOf;
@@ -27,12 +28,28 @@ contract Pin is Ownable {
 
   event Pinned(address indexed user, address nftAddress, uint nftId);
 
-  constructor(address _voteMining) {
-    voteMining = _voteMining;
+  constructor(address _voteMiningV1, address _voteMiningV2) {
+    voteMiningV1 = _voteMiningV1;
+    voteMiningV2 = _voteMiningV2;
   }
 
   function pin(address nftAddr, uint nftId) external {
-    IVoteMining(voteMining).claimMintRewards(nftAddr, nftId, msg.sender);
+    IVoteMining(voteMiningV1).claimMintRewards(nftAddr, nftId, msg.sender);
+
+    IERC721(nftAddr).transferFrom(msg.sender, address(this), nftId);
+    _ownedTokens[msg.sender].push(NFT({
+      addr: nftAddr,
+      id: nftId,
+      owner: msg.sender
+    }));
+    balanceOf[msg.sender] = balanceOf[msg.sender].add(1);
+    ownerOf[nftAddr][nftId] = msg.sender;
+
+    emit Pinned(msg.sender, nftAddr, nftId);
+  }
+
+  function pinV2(address nftAddr, uint nftId) external {
+    IVoteMining(voteMiningV2).claimMintRewards(nftAddr, nftId, msg.sender);
 
     IERC721(nftAddr).transferFrom(msg.sender, address(this), nftId);
     _ownedTokens[msg.sender].push(NFT({
