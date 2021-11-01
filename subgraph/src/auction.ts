@@ -16,7 +16,7 @@ export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
   let entity = new AuctionList(id)
 
   entity.count = BigInt.fromI32(1)
-  entity.contractAddress = event.transaction.to.toHex()
+  entity.contractAddress = event.transaction.to.toString()
   entity.creatorAddress = event.params.creatorAddress
   entity.matchId = event.params.matchId
   entity.openBlock = event.params.openBlock
@@ -65,7 +65,7 @@ export function handlePlayerBidEvent(event: PlayerBidEvent): void {
   // `null` checks allow to create entities on demand
   let entity = new AuctionBidList(id)
 
-  entity.contractAddress = event.transaction.to.toHex()
+  entity.contractAddress = event.transaction.to.toString()
   entity.matchId = event.params.matchId
   entity.playerAddress = event.params.playerAddress
   entity.tokenIndex = event.params.tokenIndex
@@ -83,7 +83,7 @@ export function handleRewardEvent(event: RewardEvent): void {
   // `null` checks allow to create entities on demand
   let entity = new AuctionRewardList(id)
 
-  entity.contractAddress = event.transaction.to.toHex()
+  entity.contractAddress = event.transaction.to.toString()
   entity.matchId = event.params.matchId
   entity.tokenIndex = event.params.tokenIndex
   entity.winnerAddress = event.params.winnerAddress
