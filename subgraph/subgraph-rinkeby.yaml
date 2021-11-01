@@ -64,6 +64,32 @@ dataSources:
           handler: handleRewardEvent
       file: ./src/auction.ts
   - kind: ethereum/contract
+    name: AuctionV2
+    network: rinkeby
+    source:
+      address: "0xf7b3A7Ce7ddADFB9c8D03BE84a654e29b3a945BD"
+      abi: Auction
+      startBlock: 9307457
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - CreateAuctionEvent
+        - PlayerBidEvent
+        - RewardEvent
+      abis:
+        - name: Auction
+          file: ./abis/AuctionV2.json
+      eventHandlers:
+        - event: CreateAuctionEvent(address,string,uint96,uint96,uint96,uint32,uint256,(address,uint256,uint256,uint256))
+          handler: handleCreateAuctionEvent
+        - event: PlayerBidEvent(string,address,uint256,uint256,uint96)
+          handler: handlePlayerBidEvent
+        - event: RewardEvent(string,uint256,address)
+          handler: handleRewardEvent
+      file: ./src/auction_v2.ts
+  - kind: ethereum/contract
     name: TrustMarketplace
     network: rinkeby
     source:
