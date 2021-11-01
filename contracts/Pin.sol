@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 interface IVoteMining {
   function claimMintRewards(address nftAddr, uint nftId, address to) external;
+  function nfts(address nftAddr, uint nftId) external view returns(uint);
+  function nftGroup(uint uid) external view returns(uint);
 }
 contract Pin is Ownable {
   using SafeMath for uint256;
@@ -34,6 +36,15 @@ contract Pin is Ownable {
   }
 
   function pin(address nftAddr, uint nftId) external {
+    uint uid = IVoteMining(voteMiningV1).nfts(nftAddr, nftId);
+    if(IVoteMining(voteMiningV1).nftGroup(uid) == 1) {
+      pinV1(nftAddr, nftId);
+    } else {
+      pinV2(nftAddr, nftId);
+    }
+  }
+
+  function pinV1(address nftAddr, uint nftId) internal {
     IVoteMining(voteMiningV1).claimMintRewards(nftAddr, nftId, msg.sender);
 
     IERC721(nftAddr).transferFrom(msg.sender, address(this), nftId);
@@ -48,7 +59,7 @@ contract Pin is Ownable {
     emit Pinned(msg.sender, nftAddr, nftId);
   }
 
-  function pinV2(address nftAddr, uint nftId) external {
+  function pinV2(address nftAddr, uint nftId) internal {
     IVoteMining(voteMiningV2).claimMintRewards(nftAddr, nftId, msg.sender);
 
     IERC721(nftAddr).transferFrom(msg.sender, address(this), nftId);
