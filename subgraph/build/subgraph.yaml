@@ -4,11 +4,11 @@ schema:
 dataSources:
   - kind: ethereum/contract
     name: UniArtsNFT
-    network: matic
+    network: rinkeby
     source:
-      address: "0x2A14626662DC305d048156F33D414DA046148081"
+      address: "0x5F48872D2F81d555c287F1dc2379B6E5fe1346C8"
       abi: UniArtsNFT
-      startBlock: 20237946
+      startBlock: 9307457
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -39,11 +39,11 @@ dataSources:
       file: UniArtsNFT/UniArtsNFT.wasm
   - kind: ethereum/contract
     name: Auction
-    network: matic
+    network: rinkeby
     source:
-      address: "0xCE7c240079CC64bA531612dADfD086841427855C"
+      address: "0x3415d9823EE52A8C21cd77C138c3774B44C9196D"
       abi: Auction
-      startBlock: 20237946
+      startBlock: 9307457
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -64,12 +64,38 @@ dataSources:
           handler: handleRewardEvent
       file: Auction/Auction.wasm
   - kind: ethereum/contract
-    name: TrustMarketplace
-    network: matic
+    name: AuctionV2
+    network: rinkeby
     source:
-      address: "0x144D738944Ea127479b3E79fB90C8ccF4E98093C"
+      address: "0xf7b3A7Ce7ddADFB9c8D03BE84a654e29b3a945BD"
+      abi: Auction
+      startBlock: 9307457
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - CreateAuctionEvent
+        - PlayerBidEvent
+        - RewardEvent
+      abis:
+        - name: Auction
+          file: AuctionV2/abis/AuctionV2.json
+      eventHandlers:
+        - event: CreateAuctionEvent(address,string,uint96,uint96,uint96,uint32,uint256,(address,uint256,uint256,uint256))
+          handler: handleCreateAuctionEvent
+        - event: PlayerBidEvent(string,address,uint256,uint256,uint96)
+          handler: handlePlayerBidEvent
+        - event: RewardEvent(string,uint256,address)
+          handler: handleRewardEvent
+      file: AuctionV2/AuctionV2.wasm
+  - kind: ethereum/contract
+    name: TrustMarketplace
+    network: rinkeby
+    source:
+      address: "0x2679ee88Aa803e37E723a569f0C71c8758f5834a"
       abi: TrustMarketplace
-      startBlock: 20238962
+      startBlock: 9307457
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
