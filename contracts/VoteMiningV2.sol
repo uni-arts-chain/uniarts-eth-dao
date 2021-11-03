@@ -34,7 +34,7 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
-	uint public VOTE_TIME_UNIT = 1 hours;
+	uint public VOTE_TIME_UNIT = 1 days;
 	uint public VOTE_DAYS = 14;
 	uint public VOTE_DURATION = VOTE_DAYS * VOTE_TIME_UNIT;
 
