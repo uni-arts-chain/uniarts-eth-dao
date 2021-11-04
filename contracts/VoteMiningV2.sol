@@ -104,7 +104,7 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 
 	uint public voteRatioMax = 10000;
 
-	mapping (address => bool) migrated;
+	mapping (address => bool) public migrated;
 	
 	
 	address internal v1;
