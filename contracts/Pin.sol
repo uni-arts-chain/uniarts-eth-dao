@@ -35,6 +35,10 @@ contract Pin is Ownable {
     voteMiningV2 = _voteMiningV2;
   }
 
+  function setV2(address _v2) external onlyOwner {
+    voteMiningV2 = _v2;
+  }
+
   function pin(address nftAddr, uint nftId) external {
     uint uid = IVoteMining(voteMiningV1).nfts(nftAddr, nftId);
     if(IVoteMining(voteMiningV1).nftGroup(uid) == 1) {
