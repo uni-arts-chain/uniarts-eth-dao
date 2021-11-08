@@ -27,6 +27,10 @@ interface IVoteMiningV1 {
 	function getBondedBalance(address user) external view returns(uint);
 	function unbondingBalances(address user, uint index) external view returns(uint, uint, uint);
 	function getUnbondingBalancesLength(address user) external view returns(uint);
+	function getUnvotableBalance(address user, address nftAddr, uint nftId) external view returns(uint);
+	function groupNFTs(uint groupId, uint index) external view returns(uint uid, address addr, uint id, address owner);
+	function groupNFTsLength(uint groupId) external view returns(uint);
+
 }
 
 
@@ -174,6 +178,9 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	event VoteBonded(address indexed user, address nftAddr, uint nftId, uint amount);
 	event UnvoteBonded(address indexed user, address nftAddr, uint nftId, uint amount);
 	event MintRewardsClaimed(address nftAddr, uint nftId, address to);
+	event MigrateBonded(address indexed user, uint amount);
+	event MigrateUnbonding(address indexed user, uint index, uint amount, uint unbondedAt, uint redeemed);
+
 
 	modifier checkNFT(address nftAddr, uint nftId) { 
 		require(nfts[nftAddr][nftId] > 0, "Invalid NFT");
@@ -576,8 +583,7 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	}
 
 	function unvoteBonded(address nftAddr, uint nftId, uint amount)
-		external 
-		checkVotingTime
+		external
 		checkNFT(nftAddr, nftId)
 	{
 		uint unvotable = getUnvotableBalance(msg.sender, nftAddr, nftId);
@@ -748,17 +754,22 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 		returns(uint[] memory mintRewards) 
 	{
 		mintRewards = new uint[](groupNFTs[groupId].length);
+		(,uint[] memory inflations) = getWeightsAndInflations(groupId);
+		uint totalMintRewards = mintRewardCap.mul(inflations[inflations.length - 1]).div(1e18);
+
 		for(uint i = 0; i < groupNFTs[groupId].length; i++) {
 			if(groupVotes[groupId] > 0) {
-				mintRewards[i] = nftVotes[groupNFTs[groupId][i].uid].mul(mintRewardCap).div(groupVotes[groupId]);
+				mintRewards[i] = nftVotes[groupNFTs[groupId][i].uid].mul(totalMintRewards).div(groupVotes[groupId]);
 			}
 		}
 	}
 
 	function getMintRewards(address nftAddr, uint nftId) public view returns(uint) {
 		uint groupId = nftGroup[nfts[nftAddr][nftId]];
+		(,uint[] memory inflations) = getWeightsAndInflations(groupId);
+		uint totalMintRewards = mintRewardCap.mul(inflations[inflations.length - 1]).div(1e18);
 		if(groupVotes[groupId] > 0) {
-			return nftVotes[nfts[nftAddr][nftId]].mul(mintRewardCap).div(groupVotes[groupId]);
+			return nftVotes[nfts[nftAddr][nftId]].mul(totalMintRewards).div(groupVotes[groupId]);
 		} else {
 			return 0;
 		}
@@ -767,10 +778,20 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 	function migrate() external {
 		require(!migrated[msg.sender], "Already migrated");
 		uint amount = IVoteMiningV1(v1).getBondedBalance(msg.sender);
-		require(amount > 0, "No bonded balance");
+		for(uint i = 0; i < IVoteMiningV1(v1).groupNFTsLength(1); i++) {
+			(,address nftAddr,uint nftId,) = IVoteMiningV1(v1).groupNFTs(1, i);
+			uint unvotable = IVoteMiningV1(v1).getUnvotableBalance(msg.sender, nftAddr, nftId);
+			if(unvotable > 0) {
+				amount = amount.add(unvotable);
+			}
+		}
+
 		bondedBalances[msg.sender] = bondedBalances[msg.sender].add(amount);
 		userTokenBalances[msg.sender][uink] = userTokenBalances[msg.sender][uink].add(amount);
-		treasury.sendRewards(address(this), amount);
+		uint val = treasury.sendRewards(address(this), amount);
+		require(val == amount, "Treasury has insufficient balance");
+
+		emit MigrateBonded(msg.sender, amount);
 
 		uint size = IVoteMiningV1(v1).getUnbondingBalancesLength(msg.sender);
 		for(uint i = 0; i < size; i++) {
@@ -780,8 +801,9 @@ contract VoteMiningV2 is Ownable, ReentrancyGuard {
 				unbondedAt: unbondedAt,
 				redeemed: redeemed
 			}));
+			emit MigrateUnbonding(msg.sender, i, value, unbondedAt, redeemed);
 		}
-		
+
 		migrated[msg.sender] = true;
 	}
 }
