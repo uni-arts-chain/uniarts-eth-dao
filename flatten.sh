@@ -1,4 +1,5 @@
 npx truffle-flattener contracts/ERC20/UINK.sol > flatten/UINK.sol
+npx truffle-flattener contracts/ERC20/WETH.sol > flatten/WETH.sol
 npx truffle-flattener contracts/UinkTreasury.sol > flatten/UinkTreasury.sol
 npx truffle-flattener contracts/VoteMining.sol > flatten/VoteMining.sol
 npx truffle-flattener contracts/VoteMiningV2.sol > flatten/VoteMiningV2.sol
