@@ -933,6 +933,15 @@ export class TrustMarketplaceOrder extends Entity {
     this.set("is_succ", Value.fromBigInt(value));
   }
 
+  get create_block_number(): BigInt {
+    let value = this.get("create_block_number");
+    return value.toBigInt();
+  }
+
+  set create_block_number(value: BigInt) {
+    this.set("create_block_number", Value.fromBigInt(value));
+  }
+
   get succ_block_number(): BigInt {
     let value = this.get("succ_block_number");
     return value.toBigInt();
@@ -941,6 +950,16 @@ export class TrustMarketplaceOrder extends Entity {
   set succ_block_number(value: BigInt) {
     this.set("succ_block_number", Value.fromBigInt(value));
   }
+
+  get cancel_block_number(): BigInt {
+    let value = this.get("cancel_block_number");
+    return value.toBigInt();
+  }
+
+  set cancel_block_number(value: BigInt) {
+    this.set("cancel_block_number", Value.fromBigInt(value));
+  }
+
 }
 
 export class TrustMarketplaceBid extends Entity {
