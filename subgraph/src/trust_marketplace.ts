@@ -39,7 +39,7 @@ export function handleBidAccepted(event: BidAccepted): void {
 export function handleBidCancelled(event: BidCancelled): void {}
 
 export function handleBidCreated(event: BidCreated): void {
-  let id = event.params.id.toString()
+  let id = event.params.id.toHex()
   let tx_hash = event.transaction.hash.toHex()
   let block_number = event.block.number
 
@@ -59,7 +59,7 @@ export function handleBidCreated(event: BidCreated): void {
 export function handleChangedFeePerMillion(event: ChangedFeePerMillion): void {}
 
 export function handleOrderCancelled(event: OrderCancelled): void {
-  let id = event.params.id.toString()
+  let id = event.params.id.toHex()
   let block_number = event.block.number
 
   // Entities only exist after they have been saved to the store;
@@ -70,7 +70,7 @@ export function handleOrderCancelled(event: OrderCancelled): void {
 }
 
 export function handleOrderCreated(event: OrderCreated): void {
-  let id = event.params.id.toString()
+  let id = event.params.id.toHex()
   let tx_hash = event.transaction.hash.toHex()
   let block_number = event.block.number
 
@@ -91,7 +91,8 @@ export function handleOrderCreated(event: OrderCreated): void {
 }
 
 export function handleOrderSuccessful(event: OrderSuccessful): void {
-  let id = event.params.id.toString()
+  let id = event.params.id.toHex()
+  let buyer = event.params.buyer
   let block_number = event.block.number
 
   // Entities only exist after they have been saved to the store;
@@ -99,6 +100,7 @@ export function handleOrderSuccessful(event: OrderSuccessful): void {
   let entity = TrustMarketplaceOrder.load(id)
   entity.is_succ = BigInt.fromI32(1)
   entity.succ_block_number = block_number
+  entity.buyer = buyer
   entity.save()
 }
 

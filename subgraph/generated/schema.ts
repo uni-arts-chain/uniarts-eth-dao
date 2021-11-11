@@ -879,6 +879,15 @@ export class TrustMarketplaceOrder extends Entity {
     this.set("seller", Value.fromBytes(value));
   }
 
+  get buyer(): Bytes {
+    let value = this.get("buyer");
+    return value.toBytes();
+  }
+
+  set buyer(value: Bytes) {
+    this.set("buyer", Value.fromBytes(value));
+  }
+
   get nft_address(): Bytes {
     let value = this.get("nft_address");
     return value.toBytes();
