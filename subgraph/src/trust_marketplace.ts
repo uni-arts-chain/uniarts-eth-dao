@@ -39,7 +39,7 @@ export function handleBidAccepted(event: BidAccepted): void {
 export function handleBidCancelled(event: BidCancelled): void {}
 
 export function handleBidCreated(event: BidCreated): void {
-  let id = event.params.id.toHex()
+  let id = event.params.id.toString()
   let tx_hash = event.transaction.hash.toHex()
   let block_number = event.block.number
 
@@ -59,7 +59,7 @@ export function handleBidCreated(event: BidCreated): void {
 export function handleChangedFeePerMillion(event: ChangedFeePerMillion): void {}
 
 export function handleOrderCancelled(event: OrderCancelled): void {
-  let id = event.params.id.toHex()
+  let id = event.params.id.toString()
   let block_number = event.block.number
 
   // Entities only exist after they have been saved to the store;
@@ -70,7 +70,7 @@ export function handleOrderCancelled(event: OrderCancelled): void {
 }
 
 export function handleOrderCreated(event: OrderCreated): void {
-  let id = event.params.id.toHex()
+  let id = event.params.id.toString()
   let tx_hash = event.transaction.hash.toHex()
   let block_number = event.block.number
 
@@ -91,7 +91,7 @@ export function handleOrderCreated(event: OrderCreated): void {
 }
 
 export function handleOrderSuccessful(event: OrderSuccessful): void {
-  let id = event.params.id.toHex()
+  let id = event.params.id.toString()
   let block_number = event.block.number
 
   // Entities only exist after they have been saved to the store;
