@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@maticnetwork/pos-portal/contracts/common/ContextMixin.sol"
 
 contract UniArtsNFT is ERC721, ERC721Enumerable, AccessControl {
   // Create a new role identifier for the minter role
