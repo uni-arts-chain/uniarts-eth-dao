@@ -15,3 +15,8 @@ npx truffle-flattener contracts/core/TokenLocker.sol > flatten/TokenLocker.sol
 npx truffle-flattener contracts/core/TokenLockerStorage.sol > flatten/TokenLockerStorage.sol
 npx truffle-flattener contracts/core/TokenLocker.sol > flatten/TokenLocker.sol
 npx truffle-flattener contracts/core/MerkleDistributor.sol > flatten/MerkleDistributor.sol
+
+
+npx truffle-flattener contracts/ERC1155/ERC1155Tradable.sol > flatten/ERC1155Tradable.sol
+npx truffle-flattener contracts/ERC1155/UniArtsSouvenirs.sol > flatten/UniArtsSouvenirs.sol
+npx truffle-flattener contracts/ERC1155/UniArtsCollectible.sol > flatten/UniArtsCollectible.sol
