@@ -12,6 +12,12 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
+contract OwnableDelegateProxy { }
+
+contract ProxyRegistry {
+  mapping(address => OwnableDelegateProxy) public proxies;
+}
+
 /**
  * @dev Implementation of the basic standard multi-token.
  * See https://eips.ethereum.org/EIPS/eip-1155
@@ -40,7 +46,7 @@ contract ERC1155Tradable is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
     // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
     string private _uri;
 
-    address proxyRegistryAddress;
+    address public proxyRegistryAddress;
 
     // current TokenID
     uint256 private _currentTokenID = 0;
@@ -77,6 +83,7 @@ contract ERC1155Tradable is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
     constructor(
         string memory _name,
         string memory _symbol,
+        string memory _uri,
         address _proxyRegistryAddress
     ) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -87,6 +94,7 @@ contract ERC1155Tradable is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
         name = _name;
         symbol = _symbol;
         proxyRegistryAddress = _proxyRegistryAddress;
+        _setURI(_uri);
     }
 
   /**
@@ -201,6 +209,12 @@ contract ERC1155Tradable is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
      * @dev See {IERC1155-isApprovedForAll}.
      */
     function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {
+        // Whitelist OpenSea proxy contract for easy trading.
+        ProxyRegistry proxyRegistry = ProxyRegistry(proxyRegistryAddress);
+        if (address(proxyRegistry.proxies(account)) == operator) {
+            return true;
+        }
+
         return _operatorApprovals[account][operator];
     }
 
