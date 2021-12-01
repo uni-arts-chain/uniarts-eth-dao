@@ -90,6 +90,8 @@
 
 - MerkleDistributor: 0x129078fB21E15c8F3e6B796135eaB9E24dcf8Eb2
 
+- UniArtsSouvenirs: 0x9042bDB2cf276764C0BEe227Eb3Bd9fE412ABaB8
+
 # Indexing Services
 
 ✔ Write compiled subgraph to build/
