@@ -1,3 +1,7 @@
+## Art Formula
+
+![Image text](https://raw.githubusercontent.com/uni-arts-chain/uniarts-eth-dao/master/assets/logo.png)
+
 ## Uniarts contracts
 
 ### Ethereum Mainnet
