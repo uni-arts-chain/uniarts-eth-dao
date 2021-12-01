@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract OwnableDelegateProxy { }
 
@@ -28,6 +29,7 @@ contract ProxyRegistry {
 contract ERC1155Tradable is Context, ERC165, IERC1155, IERC1155MetadataURI, AccessControlEnumerable, Pausable {
     using Address for address;
     using SafeMath for uint256;
+    using Strings for string;
 
     // ROLE
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -147,8 +149,9 @@ contract ERC1155Tradable is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
      * Clients calling this function must replace the `\{id\}` substring with the
      * actual token type ID.
      */
-    function uri(uint256) public view virtual override returns (string memory) {
-        return _uri;
+    function uri(uint256 _id) public view virtual override returns (string memory) {
+        require(_exists(_id), "ERC721Tradable#uri: NONEXISTENT_TOKEN");
+        return string(abi.encodePacked(_uri, Strings.toString(_id)));
     }
 
     /**
@@ -616,5 +619,16 @@ contract ERC1155Tradable is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
      */
     function _incrementTokenTypeId() private  {
         _currentTokenID++;
+    }
+
+    /**
+    * @dev Returns whether the specified token exists by checking to see if it has a creator
+    * @param _id uint256 ID of the token to query the existence of
+    * @return bool whether the token exists
+    */
+    function _exists(
+        uint256 _id
+    ) internal view returns (bool) {
+        return creators[_id] != address(0);
     }
 }
