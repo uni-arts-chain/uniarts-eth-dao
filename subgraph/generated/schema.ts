@@ -1065,4 +1065,722 @@ export class TrustMarketplaceBid extends Entity {
   }
 }
 
+export class MultiTokenAccount extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save MultiTokenAccount entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save MultiTokenAccount entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("MultiTokenAccount", id.toString(), this);
+  }
+
+  static load(id: string): MultiTokenAccount | null {
+    return store.get("MultiTokenAccount", id) as MultiTokenAccount | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get balances(): Array<string> {
+    let value = this.get("balances");
+    return value.toStringArray();
+  }
+
+  set balances(value: Array<string>) {
+    this.set("balances", Value.fromStringArray(value));
+  }
+
+  get transfersOperator(): Array<string> {
+    let value = this.get("transfersOperator");
+    return value.toStringArray();
+  }
+
+  set transfersOperator(value: Array<string>) {
+    this.set("transfersOperator", Value.fromStringArray(value));
+  }
+
+  get transfersFrom(): Array<string> {
+    let value = this.get("transfersFrom");
+    return value.toStringArray();
+  }
+
+  set transfersFrom(value: Array<string>) {
+    this.set("transfersFrom", Value.fromStringArray(value));
+  }
+
+  get transfersTo(): Array<string> {
+    let value = this.get("transfersTo");
+    return value.toStringArray();
+  }
+
+  set transfersTo(value: Array<string>) {
+    this.set("transfersTo", Value.fromStringArray(value));
+  }
+
+  get approvalsOwner(): Array<string> {
+    let value = this.get("approvalsOwner");
+    return value.toStringArray();
+  }
+
+  set approvalsOwner(value: Array<string>) {
+    this.set("approvalsOwner", Value.fromStringArray(value));
+  }
+
+  get approvalsSpender(): Array<string> {
+    let value = this.get("approvalsSpender");
+    return value.toStringArray();
+  }
+
+  set approvalsSpender(value: Array<string>) {
+    this.set("approvalsSpender", Value.fromStringArray(value));
+  }
+}
+
+export class MultiTokenRegistry extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save MultiTokenRegistry entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save MultiTokenRegistry entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("MultiTokenRegistry", id.toString(), this);
+  }
+
+  static load(id: string): MultiTokenRegistry | null {
+    return store.get("MultiTokenRegistry", id) as MultiTokenRegistry | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get tokens(): Array<string> {
+    let value = this.get("tokens");
+    return value.toStringArray();
+  }
+
+  set tokens(value: Array<string>) {
+    this.set("tokens", Value.fromStringArray(value));
+  }
+}
+
+export class MultiToken extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save MultiToken entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save MultiToken entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("MultiToken", id.toString(), this);
+  }
+
+  static load(id: string): MultiToken | null {
+    return store.get("MultiToken", id) as MultiToken | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get registry(): string {
+    let value = this.get("registry");
+    return value.toString();
+  }
+
+  set registry(value: string) {
+    this.set("registry", Value.fromString(value));
+  }
+
+  get identifier(): BigInt {
+    let value = this.get("identifier");
+    return value.toBigInt();
+  }
+
+  set identifier(value: BigInt) {
+    this.set("identifier", Value.fromBigInt(value));
+  }
+
+  get URI(): string | null {
+    let value = this.get("URI");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set URI(value: string | null) {
+    if (value === null) {
+      this.unset("URI");
+    } else {
+      this.set("URI", Value.fromString(value as string));
+    }
+  }
+
+  get totalSupply(): BigInt {
+    let value = this.get("totalSupply");
+    return value.toBigInt();
+  }
+
+  set totalSupply(value: BigInt) {
+    this.set("totalSupply", Value.fromBigInt(value));
+  }
+
+  get balances(): Array<string> {
+    let value = this.get("balances");
+    return value.toStringArray();
+  }
+
+  set balances(value: Array<string>) {
+    this.set("balances", Value.fromStringArray(value));
+  }
+
+  get transfers(): Array<string> {
+    let value = this.get("transfers");
+    return value.toStringArray();
+  }
+
+  set transfers(value: Array<string>) {
+    this.set("transfers", Value.fromStringArray(value));
+  }
+
+  get approvals(): Array<string> {
+    let value = this.get("approvals");
+    return value.toStringArray();
+  }
+
+  set approvals(value: Array<string>) {
+    this.set("approvals", Value.fromStringArray(value));
+  }
+}
+
+export class MultiTokenBalance extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save MultiTokenBalance entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save MultiTokenBalance entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("MultiTokenBalance", id.toString(), this);
+  }
+
+  static load(id: string): MultiTokenBalance | null {
+    return store.get("MultiTokenBalance", id) as MultiTokenBalance | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get token(): string {
+    let value = this.get("token");
+    return value.toString();
+  }
+
+  set token(value: string) {
+    this.set("token", Value.fromString(value));
+  }
+
+  get account(): string {
+    let value = this.get("account");
+    return value.toString();
+  }
+
+  set account(value: string) {
+    this.set("account", Value.fromString(value));
+  }
+
+  get value(): BigInt {
+    let value = this.get("value");
+    return value.toBigInt();
+  }
+
+  set value(value: BigInt) {
+    this.set("value", Value.fromBigInt(value));
+  }
+
+  get transfersFrom(): Array<string> {
+    let value = this.get("transfersFrom");
+    return value.toStringArray();
+  }
+
+  set transfersFrom(value: Array<string>) {
+    this.set("transfersFrom", Value.fromStringArray(value));
+  }
+
+  get transfersTo(): Array<string> {
+    let value = this.get("transfersTo");
+    return value.toStringArray();
+  }
+
+  set transfersTo(value: Array<string>) {
+    this.set("transfersTo", Value.fromStringArray(value));
+  }
+}
+
+export class MultiTokenTransfer extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save MultiTokenTransfer entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save MultiTokenTransfer entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("MultiTokenTransfer", id.toString(), this);
+  }
+
+  static load(id: string): MultiTokenTransfer | null {
+    return store.get("MultiTokenTransfer", id) as MultiTokenTransfer | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get transaction(): string {
+    let value = this.get("transaction");
+    return value.toString();
+  }
+
+  set transaction(value: string) {
+    this.set("transaction", Value.fromString(value));
+  }
+
+  get timestamp(): BigInt {
+    let value = this.get("timestamp");
+    return value.toBigInt();
+  }
+
+  set timestamp(value: BigInt) {
+    this.set("timestamp", Value.fromBigInt(value));
+  }
+
+  get token(): string {
+    let value = this.get("token");
+    return value.toString();
+  }
+
+  set token(value: string) {
+    this.set("token", Value.fromString(value));
+  }
+
+  get operator(): string {
+    let value = this.get("operator");
+    return value.toString();
+  }
+
+  set operator(value: string) {
+    this.set("operator", Value.fromString(value));
+  }
+
+  get from(): string {
+    let value = this.get("from");
+    return value.toString();
+  }
+
+  set from(value: string) {
+    this.set("from", Value.fromString(value));
+  }
+
+  get fromBalance(): string | null {
+    let value = this.get("fromBalance");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set fromBalance(value: string | null) {
+    if (value === null) {
+      this.unset("fromBalance");
+    } else {
+      this.set("fromBalance", Value.fromString(value as string));
+    }
+  }
+
+  get to(): string {
+    let value = this.get("to");
+    return value.toString();
+  }
+
+  set to(value: string) {
+    this.set("to", Value.fromString(value));
+  }
+
+  get toBalance(): string | null {
+    let value = this.get("toBalance");
+    if (value === null || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set toBalance(value: string | null) {
+    if (value === null) {
+      this.unset("toBalance");
+    } else {
+      this.set("toBalance", Value.fromString(value as string));
+    }
+  }
+
+  get value(): BigInt {
+    let value = this.get("value");
+    return value.toBigInt();
+  }
+
+  set value(value: BigInt) {
+    this.set("value", Value.fromBigInt(value));
+  }
+}
+
+export class MultiTokenApproval extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save MultiTokenApproval entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save MultiTokenApproval entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("MultiTokenApproval", id.toString(), this);
+  }
+
+  static load(id: string): MultiTokenApproval | null {
+    return store.get("MultiTokenApproval", id) as MultiTokenApproval | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get transaction(): string {
+    let value = this.get("transaction");
+    return value.toString();
+  }
+
+  set transaction(value: string) {
+    this.set("transaction", Value.fromString(value));
+  }
+
+  get timestamp(): BigInt {
+    let value = this.get("timestamp");
+    return value.toBigInt();
+  }
+
+  set timestamp(value: BigInt) {
+    this.set("timestamp", Value.fromBigInt(value));
+  }
+
+  get token(): string {
+    let value = this.get("token");
+    return value.toString();
+  }
+
+  set token(value: string) {
+    this.set("token", Value.fromString(value));
+  }
+
+  get owner(): string {
+    let value = this.get("owner");
+    return value.toString();
+  }
+
+  set owner(value: string) {
+    this.set("owner", Value.fromString(value));
+  }
+
+  get spender(): string {
+    let value = this.get("spender");
+    return value.toString();
+  }
+
+  set spender(value: string) {
+    this.set("spender", Value.fromString(value));
+  }
+
+  get value(): BigInt {
+    let value = this.get("value");
+    return value.toBigInt();
+  }
+
+  set value(value: BigInt) {
+    this.set("value", Value.fromBigInt(value));
+  }
+}
+
+export class DecimalValue extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save DecimalValue entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save DecimalValue entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("DecimalValue", id.toString(), this);
+  }
+
+  static load(id: string): DecimalValue | null {
+    return store.get("DecimalValue", id) as DecimalValue | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get value(): BigDecimal {
+    let value = this.get("value");
+    return value.toBigDecimal();
+  }
+
+  set value(value: BigDecimal) {
+    this.set("value", Value.fromBigDecimal(value));
+  }
+
+  get exact(): BigInt {
+    let value = this.get("exact");
+    return value.toBigInt();
+  }
+
+  set exact(value: BigInt) {
+    this.set("exact", Value.fromBigInt(value));
+  }
+
+  get decimals(): i32 {
+    let value = this.get("decimals");
+    return value.toI32();
+  }
+
+  set decimals(value: i32) {
+    this.set("decimals", Value.fromI32(value));
+  }
+}
+
+export class Transaction extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save Transaction entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save Transaction entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("Transaction", id.toString(), this);
+  }
+
+  static load(id: string): Transaction | null {
+    return store.get("Transaction", id) as Transaction | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get timestamp(): BigInt {
+    let value = this.get("timestamp");
+    return value.toBigInt();
+  }
+
+  set timestamp(value: BigInt) {
+    this.set("timestamp", Value.fromBigInt(value));
+  }
+
+  get blockNumber(): BigInt {
+    let value = this.get("blockNumber");
+    return value.toBigInt();
+  }
+
+  set blockNumber(value: BigInt) {
+    this.set("blockNumber", Value.fromBigInt(value));
+  }
+
+  get events(): Array<string> {
+    let value = this.get("events");
+    return value.toStringArray();
+  }
+
+  set events(value: Array<string>) {
+    this.set("events", Value.fromStringArray(value));
+  }
+}
+
+export class PersistentStringArray extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(
+      id !== null,
+      "Cannot save PersistentStringArray entity without an ID"
+    );
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save PersistentStringArray entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("PersistentStringArray", id.toString(), this);
+  }
+
+  static load(id: string): PersistentStringArray | null {
+    return store.get(
+      "PersistentStringArray",
+      id
+    ) as PersistentStringArray | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get values(): Array<string> {
+    let value = this.get("values");
+    return value.toStringArray();
+  }
+
+  set values(value: Array<string>) {
+    this.set("values", Value.fromStringArray(value));
+  }
+}
+
+export class PersistentString extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save PersistentString entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save PersistentString entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("PersistentString", id.toString(), this);
+  }
+
+  static load(id: string): PersistentString | null {
+    return store.get("PersistentString", id) as PersistentString | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get value(): string {
+    let value = this.get("value");
+    return value.toString();
+  }
+
+  set value(value: string) {
+    this.set("value", Value.fromString(value));
+  }
+}
+
 
