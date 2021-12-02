@@ -6,6 +6,12 @@ import {
 	TransferSingle as TransferSingleEvent,
 	URI            as URIEvent
 } from "../generated/UniArtsSouvenirs/UniArtsSouvenirs"
+import {
+	constants,
+	events,
+	integers,
+	transactions,
+} from '@amxx/graphprotocol-utils'
 import { MultiToken, MultiTokenRegistry, MultiTokenAccount, MultiTokenBalance, MultiTokenTransfer } from "../generated/schema"
 
 function fetchToken(registry: MultiTokenRegistry, id: BigInt): MultiToken {
