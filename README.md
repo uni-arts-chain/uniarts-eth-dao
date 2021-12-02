@@ -2,6 +2,12 @@
 
 ![Image text](https://raw.githubusercontent.com/uni-arts-chain/uniarts-eth-dao/master/assets/logo.png)
 
+UniArts is an Exhibition and IDO platform for NFTs with value discovery as its core feature.  
+
+It also provides Art-Fi features that covers NFT voting incentives, DAO curation, NFT financing and artworks NFT gaming, to better bond & connect fine art NFTs with the community. 
+
+UniArts is also developing its substrate based main-net with EVMs based smart contracts for NFT infrastructures.
+
 ## Uniarts contracts
 
 ### Ethereum Mainnet
