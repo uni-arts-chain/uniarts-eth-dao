@@ -118,7 +118,7 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165, Ownable
         // check if matchId is occupied
         require(matches[matchId].creatorAddress == ADDRESS_NULL, "matchId is occupied");
 
-        require(payTokens[payTokenName] == ADDRESS_NULL, "not support this address pay token");
+        require(payTokens[payTokenName] != ADDRESS_NULL, "not support this address pay token");
         
         // check valid openBlock, expiryBlock, expiryExtensionOnBidUpdate
         require(expiryBlock > openBlock && openBlock > block.number, "condition expiryBlock > openBlock > current block count not satisfied");
@@ -345,7 +345,7 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165, Ownable
     }
 
     function creator_withdraw_profit(string memory payTokenName) external {
-        require(payTokens[payTokenName] == ADDRESS_NULL, "not support this address pay token");
+        require(payTokens[payTokenName] != ADDRESS_NULL, "not support this address pay token");
         address payTokenAddress = payTokens[payTokenName];
 
         uint balance = creatorBalance[msg.sender][payTokenAddress];
