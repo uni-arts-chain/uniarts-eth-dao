@@ -76,6 +76,7 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165, Ownable
     event PlayerWithdrawBid(string matchId, uint tokenIndex);
     event ProcessWithdrawNft(string matchId, uint tokenIndex);
     event CreatorWithdrawProfit(address creatorAddress, address payTokenAddress, uint256 balance);
+    event SetNewPayToken(string tokenName, address tokenAddress);
 
     // modifier 
     modifier validTokenIndex(string memory matchId, uint tokenIndex) {
@@ -97,13 +98,15 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165, Ownable
     }
 
     constructor(string memory _payTokenName, address _payTokenAddress) {
-        require(_payTokenAddress != address(0), "Pay Token Address should not be address(0)");
-        payTokens[_payTokenName] = _payTokenAddress;
+        require(_payTokenAddress != ADDRESS_NULL, "invalid token address");
+		payTokens[_payTokenName] = _payTokenAddress;
+        emit SetNewPayToken(_payTokenName, _payTokenAddress);
     }
 
     function setPayToken(string memory _token_name, address _token_address) external onlyOwner {
         require(_token_address != ADDRESS_NULL, "invalid token address");
 		payTokens[_token_name] = _token_address;
+        emit SetNewPayToken(_token_name, _token_address);
 	}
 
     function createAuction(
