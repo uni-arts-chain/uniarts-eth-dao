@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -15,7 +15,7 @@ import "./interfaces/IMultiTokenTrustMarketplace.sol";
 import "./FeeManager.sol";
 
 
-contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiTokenTrustMarketplace, ERC1155Holder {
+contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiTokenTrustMarketplace, ERC1155Holder, ReentrancyGuard {
 
     using Address for address;
     using SafeMath for uint256;
@@ -36,6 +36,9 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
 
     // 721 Interfaces
     bytes4 public constant _INTERFACE_ID_ERC1155 = 0xd9b67a26;
+
+    /* All the order id are stored here */
+    bytes32[] public orderIds;
 
     /**
      * @dev Initialize this contract. Acts as a constructor
@@ -71,7 +74,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         uint256 _priceInWei,
         uint256 _expiresAt
     )
-        public whenNotPaused
+        public nonReentrant whenNotPaused
     {
         _createOrder(_nftAddress, _assetId, _assetAmount, _priceInWei, _expiresAt);
     }
@@ -132,7 +135,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         uint256 _priceInWei,
         uint256 _expiresAt
     )
-        public whenNotPaused
+        public nonReentrant whenNotPaused
     {
         Order memory order = orderByOrderId[_nftAddress][_orderId];
 
@@ -166,7 +169,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         bytes32 _orderId,
         uint256 _priceInWei
     )
-        public whenNotPaused
+        public nonReentrant whenNotPaused
     {
         // Get the current valid order for the asset or fail
         Order memory order = _getValidOrder(
@@ -242,7 +245,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         uint256 _priceInWei,
         uint256 _expiresAt
     )
-        public whenNotPaused
+        public nonReentrant whenNotPaused
     {
         _createBid(
             _orderId,
@@ -269,7 +272,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         uint256 _priceInWei,
         uint256 _expiresAt
     )
-        public whenNotPaused
+        public nonReentrant whenNotPaused
     {
         _createBid(
             _orderId,
@@ -321,7 +324,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         address _nftAddress,
         bytes32 _orderId
     )
-        public whenNotPaused
+        public nonReentrant whenNotPaused
     {
         Bid memory bid = bidByOrderId[_nftAddress][_orderId];
 
@@ -351,7 +354,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         bytes32 _orderId,
         uint256 _priceInWei
     )
-        public whenNotPaused
+        public nonReentrant whenNotPaused
     {
         // check order validity
         Order memory order = _getValidOrder(_nftAddress, _orderId);
@@ -513,6 +516,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
             price: _priceInWei,
             expiresAt: _expiresAt
         });
+        orderIds.push(orderId);
 
         emit OrderCreated(
             orderId,
