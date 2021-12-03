@@ -7,8 +7,9 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
+contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165, Ownable {
 
     // using safeErc20 for ierc20 based contract
     using SafeERC20 for IERC20;
@@ -26,7 +27,6 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
     bytes4  constant ERC1155_ONBATCHRECEIVED_RESULT = bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
     // uint constant MAX_UINT96 = type(uint96).max;
 
-    // structs
     struct NFT {
         address contractAddress;
         uint    tokenId;
@@ -43,6 +43,7 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
 
     struct Match {
         address creatorAddress;
+        address payTokenAddress;
         uint96 minIncrement; // percentage based
         uint96 openBlock;
         uint96 expiryBlock;
@@ -50,7 +51,9 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         uint32 nftCount;
     }
 
-    // state
+    // pay_token_name => token_address
+    mapping(string => address) public  payTokens;
+
     // matchId => Match
     mapping(string => Match) public  matches;
 
@@ -60,22 +63,19 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
     // matchId => Result
     mapping(string => mapping(uint => AuctionResult)) public  matchResults;
     
-    // matchId => player => tokenIndex => price
-    mapping(string => mapping(address => mapping(uint => uint))) private playerBid;
+    // matchId => player => tokenIndex => payTokenAddress => price
+    mapping(string => mapping(address => mapping(uint => mapping(address => uint)))) private playerBid;
 
-    // address to balance
-    mapping(address => uint) private creatorBalance;
+    // address to payTokenAddress => balance
+    mapping(address => mapping(address => uint)) private creatorBalance;
 
     // events
-    event CreateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, uint tokenIndex, NFT nfts);
-    event PlayerBidEvent(string matchId, address playerAddress, uint tokenIndex, uint bid, uint96 expiryBlock);
+    event CreateAuctionEvent(address creatorAddress, string matchId, address payTokenAddress, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, uint tokenIndex, NFT nfts);
+    event PlayerBidEvent(string matchId, address playerAddress, uint tokenIndex, address payTokenAddress, uint bid, uint96 expiryBlock);
     event RewardEvent(string matchId, uint tokenIndex, address winnerAddress);
     event PlayerWithdrawBid(string matchId, uint tokenIndex);
     event ProcessWithdrawNft(string matchId, uint tokenIndex);
-    event CreatorWithdrawProfit(address creatorAddress, uint256 balance);
-
-    // base erc20 token
-    address public USDT_ADDRESS;
+    event CreatorWithdrawProfit(address creatorAddress, address payTokenAddress, uint256 balance);
 
     // modifier 
     modifier validTokenIndex(string memory matchId, uint tokenIndex) {
@@ -96,13 +96,19 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         _;
     }
 
-    constructor(address usdtContractAddress) {
-        require(usdtContractAddress != address(0), "usdtContractAddress should not be address(0)");
-        USDT_ADDRESS = usdtContractAddress;
+    constructor(string memory _payTokenName, address _payTokenAddress) {
+        require(_payTokenAddress != address(0), "Pay Token Address should not be address(0)");
+        payTokens[_payTokenName] = _payTokenAddress;
     }
 
+    function setPayToken(string memory _token_name, address _token_address) external onlyOwner {
+        require(_token_address != ADDRESS_NULL, "invalid token address");
+		payTokens[_token_name] = _token_address;
+	}
+
     function createAuction(
-        string memory matchId, 
+        string memory matchId,
+        string memory payTokenName,
         uint96 openBlock, 
         uint96 expiryBlock,
         uint32 expiryExtension,
@@ -111,6 +117,8 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
 
         // check if matchId is occupied
         require(matches[matchId].creatorAddress == ADDRESS_NULL, "matchId is occupied");
+
+        require(payTokens[payTokenName] == ADDRESS_NULL, "not support this address pay token");
         
         // check valid openBlock, expiryBlock, expiryExtensionOnBidUpdate
         require(expiryBlock > openBlock && openBlock > block.number, "condition expiryBlock > openBlock > current block count not satisfied");
@@ -128,6 +136,7 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
             require(nfts[i].minBid > 1, "minBid must be greater than 1");
             require(minIncrement * nfts[i].minBid / 100 > 0, "increment should be greater than 0");
             
+            
             // if meet requirements then send tokens to contract
             IERC1155(nfts[i].contractAddress).safeTransferFrom(msg.sender, address(this), nfts[i].tokenId, nfts[i].amount, "");
             
@@ -139,6 +148,7 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         // create match
         matches[matchId] = Match(
             msg.sender,
+            payTokens[payTokenName],
             minIncrement, // percentage based
             openBlock,
             expiryBlock,
@@ -149,7 +159,7 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         // emit events
         // reateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, uint tokenIndex, NFT nfts);
         for(uint i = 0; i < nfts.length; ++i) {
-            emit CreateAuctionEvent(msg.sender, matchId, openBlock, expiryBlock, minIncrement, expiryExtension, i, nfts[i]);
+            emit CreateAuctionEvent(msg.sender, matchId, payTokens[payTokenName], openBlock, expiryBlock, minIncrement, expiryExtension, i, nfts[i]);
         }
     }
 
@@ -182,8 +192,8 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         // update match
         amatch.nftCount = uint32(nftCount + 1);
         // emit events
-        // reateAuctionEvent(address creatorAddress, string matchId, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, uint tokenIndex, NFT nfts);
-        emit CreateAuctionEvent(msg.sender, matchId, amatch.openBlock, amatch.expiryBlock, amatch.minIncrement, amatch.expiryExtension, nftCount, nft);
+        // createAuctionEvent(address creatorAddress, string matchId, address payTokenAddress, uint96 openBlock, uint96 expiryBlock, uint96 increment, uint32 expiryExtension, uint tokenIndex, NFT nfts);
+        emit CreateAuctionEvent(msg.sender, matchId, amatch.payTokenAddress, amatch.openBlock, amatch.expiryBlock, amatch.minIncrement, amatch.expiryExtension, nftCount, nft);
     }
 
     function player_bid(string memory matchId, uint tokenIndex, uint amount) external nonReentrant validTokenIndex(matchId, tokenIndex) {
@@ -195,6 +205,7 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         uint    standingBid     = auctionResult.standingBid;
         uint    nftMinBid       = matchNFTs[matchId][tokenIndex].minBid;
         uint    increment       = nftMinBid * amatch.minIncrement / 100;
+        address payTokenAddress = amatch.payTokenAddress;
         
         // check valid amount (> current wining, sender someone different from winner)
         // known issue: Auction creator should be aware of the case where stadingBid = 1 and min increment >= 1
@@ -214,18 +225,19 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         }
 
         // just transfer (amount - currentBid) of that person to contract
-        uint transferAmount = amount - playerBid[matchId][playerAddress][tokenIndex]; // sure that amount always higher than current
-        playerBid[matchId][playerAddress][tokenIndex] = amount;
+        uint transferAmount = amount - playerBid[matchId][playerAddress][tokenIndex][payTokenAddress]; // sure that amount always higher than current
+        playerBid[matchId][playerAddress][tokenIndex][payTokenAddress] = amount;
     
         // emit event
         emit PlayerBidEvent(
             matchId, 
             playerAddress,
             tokenIndex,
+            payTokenAddress,
             amount, 
             amatch.expiryBlock
         );
-        IERC20(USDT_ADDRESS).safeTransferFrom(playerAddress, address(this), transferAmount);
+        IERC20(payTokenAddress).safeTransferFrom(playerAddress, address(this), transferAmount);
     }
 
     function player_fixed_price(string memory matchId, uint tokenIndex) external nonReentrant validTokenIndex(matchId, tokenIndex) {
@@ -236,6 +248,7 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         AuctionResult memory auctionResult = matchResults[matchId][tokenIndex];
         uint standingBid = auctionResult.standingBid;
         uint fixedPrice  = matchNFTs[matchId][tokenIndex].fixedPrice;
+        address payTokenAddress = amatch.payTokenAddress;
 
         // check standingBid price
         require(fixedPrice > standingBid, "Standingbid has exceeded the fixedPrice");
@@ -250,18 +263,19 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         }
 
         // just transfer (amount - currentBid) of that person to contract
-        uint transferAmount = fixedPrice - playerBid[matchId][playerAddress][tokenIndex]; // sure that amount always higher than current
-        playerBid[matchId][playerAddress][tokenIndex] = fixedPrice;
+        uint transferAmount = fixedPrice - playerBid[matchId][playerAddress][tokenIndex][payTokenAddress]; // sure that amount always higher than current
+        playerBid[matchId][playerAddress][tokenIndex][payTokenAddress] = fixedPrice;
     
         // emit event
         emit PlayerBidEvent(
             matchId, 
             playerAddress,
             tokenIndex,
+            payTokenAddress,
             fixedPrice, 
             amatch.expiryBlock
         );
-        IERC20(USDT_ADDRESS).safeTransferFrom(playerAddress, address(this), transferAmount);
+        IERC20(payTokenAddress).safeTransferFrom(playerAddress, address(this), transferAmount);
 
         // send NFT
         _win_audit(matchId, tokenIndex);
@@ -273,15 +287,17 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         // check if player is top bidder 
         address playerAddress = msg.sender;
         require(matchResults[matchId][tokenIndex].topBidder != playerAddress, "top bidder cannot withdraw");
+        Match memory amatch = matches[matchId];
+        address payTokenAddress = amatch.payTokenAddress;
 
-        uint amount = playerBid[matchId][playerAddress][tokenIndex];
+        uint amount = playerBid[matchId][playerAddress][tokenIndex][payTokenAddress];
         require(amount > 0, "bid must be greater than 0 to withdraw");
 
         // reset bid amount        
-        playerBid[matchId][playerAddress][tokenIndex] = 0;
+        playerBid[matchId][playerAddress][tokenIndex][payTokenAddress] = 0;
 
         // transfer money
-        IERC20(USDT_ADDRESS).safeTransfer(playerAddress, amount); // auto reverts on error
+        IERC20(payTokenAddress).safeTransfer(playerAddress, amount); // auto reverts on error
 
         // emit events
         // event PlayerWithdrawBid(string matchId, uint tokenIndex);
@@ -328,18 +344,21 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         process_withdraw_nft(matchId, tokenIndex);
     }
 
-    function creator_withdraw_profit() external {
-        uint balance = creatorBalance[msg.sender];
+    function creator_withdraw_profit(string memory payTokenName) external {
+        require(payTokens[payTokenName] == ADDRESS_NULL, "not support this address pay token");
+        address payTokenAddress = payTokens[payTokenName];
+
+        uint balance = creatorBalance[msg.sender][payTokenAddress];
         require(balance > 0, "creator balance must be greater than 0");
         
         // reset balance 
-        creatorBalance[msg.sender] = 0;
+        creatorBalance[msg.sender][payTokenAddress] = 0;
         
         // send money
-        IERC20(USDT_ADDRESS).safeTransfer(msg.sender, balance);
+        IERC20(payTokenAddress).safeTransfer(msg.sender, balance);
         // emit events
         // event CreatorWithdrawProfit(address creatorAddress, uint256 balance);
-        emit CreatorWithdrawProfit(msg.sender, balance);
+        emit CreatorWithdrawProfit(msg.sender, payTokenAddress, balance);
     }
 
 
@@ -360,10 +379,11 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         return ERC1155_ONBATCHRECEIVED_RESULT;
     }
 
-    function get_match(string memory matchId) external view returns(address, uint, uint, uint, uint, uint) {
+    function get_match(string memory matchId) external view returns(address, address, uint, uint, uint, uint, uint) {
         Match memory amatch = matches[matchId];
         return (
             amatch.creatorAddress,
+            amatch.payTokenAddress,
             amatch.minIncrement, 
             amatch.openBlock,
             amatch.expiryBlock,
@@ -372,19 +392,29 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         );
     }
 
+    function get_pay_token(string calldata payTokenName) external view returns(string memory, address) {
+        return (
+            payTokenName,
+            payTokens[payTokenName]
+        );
+    }
+
     function get_current_result(string memory matchId, uint tokenIndex) external view returns (address, uint) {
         return (matchResults[matchId][tokenIndex].topBidder, matchResults[matchId][tokenIndex].standingBid);
     }
 
-    function get_player_bid(string memory matchId, address playerAddress, uint tokenIndex) external view returns(uint) {
-        return playerBid[matchId][playerAddress][tokenIndex];
+    function get_player_bid(string memory matchId, address playerAddress, uint tokenIndex, address payTokenAddress) external view returns(uint) {
+        return playerBid[matchId][playerAddress][tokenIndex][payTokenAddress];
     }
 
-    function get_creator_balance(address creatorAddress) external view returns(uint) {
-        return creatorBalance[creatorAddress];
+    function get_creator_balance(address creatorAddress, address payTokenAddress) external view returns(uint) {
+        return creatorBalance[creatorAddress][payTokenAddress];
     }
 
     function _win_audit(string memory matchId, uint tokenIndex) internal returns (bool) {
+        Match memory amatch = matches[matchId];
+        address payTokenAddress = amatch.payTokenAddress;
+
         address winnerAddress  = matchResults[matchId][tokenIndex].topBidder;
         uint finalBid  = matchResults[matchId][tokenIndex].finalBid;
         require(winnerAddress != ADDRESS_NULL, "winner is not valid");
@@ -393,9 +423,9 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165 {
         matchResults[matchId][tokenIndex] = AuctionResult(ADDRESS_NULL, 0, finalBid);
 
         // increase creator's balance
-        uint standingBid = playerBid[matchId][winnerAddress][tokenIndex];
-        playerBid[matchId][winnerAddress][tokenIndex]   = 0;
-        creatorBalance[matches[matchId].creatorAddress] += standingBid;
+        uint standingBid = playerBid[matchId][winnerAddress][tokenIndex][payTokenAddress];
+        playerBid[matchId][winnerAddress][tokenIndex][payTokenAddress] = 0;
+        creatorBalance[matches[matchId].creatorAddress][payTokenAddress] += standingBid;
         
         NFT memory nft = matchNFTs[matchId][tokenIndex];
         // send nft to “address”
