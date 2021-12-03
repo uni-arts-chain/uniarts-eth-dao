@@ -21,9 +21,6 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    // current OrderID
-    uint256 private _currentOrderID = 0;
-
     IERC20 public acceptedToken;
 
     // From ERC1155 registry OrderId to Order (to avoid asset collision)
