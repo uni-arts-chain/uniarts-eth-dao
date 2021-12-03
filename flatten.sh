@@ -20,3 +20,4 @@ npx truffle-flattener contracts/core/MerkleDistributor.sol > flatten/MerkleDistr
 npx truffle-flattener contracts/ERC1155/ERC1155Tradable.sol > flatten/ERC1155Tradable.sol
 npx truffle-flattener contracts/ERC1155/UniArtsSouvenirs.sol > flatten/UniArtsSouvenirs.sol
 npx truffle-flattener contracts/ERC1155/UniArtsCollectible.sol > flatten/UniArtsCollectible.sol
+npx truffle-flattener contracts/core/MultiTokenAuction.sol > flatten/MultiTokenAuction.sol
