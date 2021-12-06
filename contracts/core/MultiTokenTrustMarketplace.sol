@@ -37,6 +37,9 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
     /* All the order id are stored here */
     bytes32[] public orderIds;
 
+    // current order size
+    uint256 private _orderSize = 0;
+
     /**
      * @dev Initialize this contract. Acts as a constructor
      * @param _acceptedToken - currency for payments
@@ -390,6 +393,14 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         );
     }
 
+    /**
+     * @dev value of _orderSize
+     * @return uint256 for the _orderSize
+     */
+    function getOrderSize() public view returns (uint256) {
+        return _orderSize;
+    }
+
 
     /**
      * @dev Internal function gets Order by nftRegistry and assetId. Checks for the order validity
@@ -513,7 +524,8 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
             price: _priceInWei,
             expiresAt: _expiresAt
         });
-        orderIds.push(orderId);
+        // increment Order
+        _incrementOrder(orderId);
 
         emit OrderCreated(
             orderId,
@@ -689,5 +701,13 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
             "The NFT contract has an invalid ERC1155 implementation"
         );
         return IERC1155(_nftAddress);
+    }
+
+    /**
+     * @dev increments the value of _orderSize
+     */
+    function _incrementOrder(bytes32 orderId) private  {
+        orderIds.push(orderId);
+        _orderSize++;
     }
 }
