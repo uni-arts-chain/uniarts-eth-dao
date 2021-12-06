@@ -906,6 +906,24 @@ export class TrustMarketplaceOrder extends Entity {
     this.set("token_id", Value.fromBigInt(value));
   }
 
+  get token_amount(): BigInt {
+    let value = this.get("token_amount");
+    return value.toBigInt();
+  }
+
+  set token_amount(value: BigInt) {
+    this.set("token_amount", Value.fromBigInt(value));
+  }
+
+  get pay_token_address(): Bytes {
+    let value = this.get("pay_token_address");
+    return value.toBytes();
+  }
+
+  set pay_token_address(value: Bytes) {
+    this.set("pay_token_address", Value.fromBytes(value));
+  }
+
   get price_in_wei(): BigInt {
     let value = this.get("price_in_wei");
     return value.toBigInt();
