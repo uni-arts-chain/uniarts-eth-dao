@@ -114,7 +114,9 @@ type TrustMarketplaceBid @entity {
   id: ID!
   nft_address: Bytes! # address
   token_id: BigInt!
+  token_amount: BigInt
   bidder: Bytes! # address
+  pay_token_address: Bytes # address
   price_in_wei: BigInt!
   expires_at: BigInt!
   tx_hash: String! # tx_hash
