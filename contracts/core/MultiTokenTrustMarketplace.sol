@@ -21,7 +21,11 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IERC20 public acceptedToken;
+    // constants
+    address constant ADDRESS_NULL = 0x0000000000000000000000000000000000000000;
+
+    // pay_token_name => token_address
+    mapping(string => address) public  payTokens;
 
     // From ERC1155 registry OrderId to Order (to avoid asset collision)
     // ERC1155 contract Address => OrderId => Order
@@ -42,15 +46,25 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
 
     /**
      * @dev Initialize this contract. Acts as a constructor
-     * @param _acceptedToken - currency for payments
+     * @param _payTokenAddress - currency for payments
      */
-    constructor(address _acceptedToken) Ownable() {
+    constructor(string memory _payTokenName, address _payTokenAddress) Ownable() {
         require(
-            _acceptedToken.isContract(),
+            _payTokenAddress.isContract(),
             "The accepted token address must be a deployed contract"
         );
-        acceptedToken = IERC20(_acceptedToken);
+		payTokens[_payTokenName] = _payTokenAddress;
+        emit SetNewPayToken(_payTokenName, _payTokenAddress);
     }
+
+    function setPayToken(string memory _token_name, address _token_address) external onlyOwner {
+        require(
+            _token_address.isContract(),
+            "The accepted token address must be a deployed contract"
+        );
+		payTokens[_token_name] = _token_address;
+        emit SetNewPayToken(_token_name, _token_address);
+	}
 
     /**
      * @dev Sets the paused failsafe. Can only be called by owner
@@ -68,6 +82,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
      * @param _expiresAt - Duration of the order (in hours)
      */
     function createOrder(
+        string memory _payTokenName,
         address _nftAddress,
         uint256 _assetId,
         uint256 _assetAmount,
@@ -76,7 +91,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
     )
         public nonReentrant whenNotPaused
     {
-        _createOrder(_nftAddress, _assetId, _assetAmount, _priceInWei, _expiresAt);
+        _createOrder(_payTokenName, _nftAddress, _assetId, _assetAmount, _priceInWei, _expiresAt);
     }
 
 
@@ -132,11 +147,15 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
     function updateOrder(
         address _nftAddress,
         bytes32 _orderId,
+        string memory _payTokenName,
         uint256 _priceInWei,
         uint256 _expiresAt
     )
         public nonReentrant whenNotPaused
     {
+        // Check pay token
+        require(payTokens[_payTokenName] != ADDRESS_NULL, "not support this address pay token");
+
         Order memory order = orderByOrderId[_nftAddress][_orderId];
 
         // Check valid order to update
@@ -150,11 +169,11 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
             _expiresAt > block.timestamp.add(1 minutes),
             "Marketplace: Expire time should be more than 1 minute in the future"
         );
-
+        order.payTokenAddress = payTokens[_payTokenName];
         order.price = _priceInWei;
         order.expiresAt = _expiresAt;
 
-        emit OrderUpdated(order.id, _priceInWei, _expiresAt);
+        emit OrderUpdated(order.id, payTokens[_payTokenName], _priceInWei, _expiresAt);
     }
 
 
@@ -176,6 +195,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
             _nftAddress,
             _orderId
         );
+        IERC20 acceptedToken = IERC20(order.payTokenAddress);
 
         /// Check the execution price matches the order price
         require(order.price == _priceInWei, "Marketplace: invalid price");
@@ -225,6 +245,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
             _nftAddress,
             order.assetId,
             order.assetAmount,
+            order.payTokenAddress,
             _priceInWei
         );
     }
@@ -284,6 +305,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         );
 
         Order memory order = _getValidOrder(_nftAddress, _orderId);
+        IERC20 acceptedToken = IERC20(order.payTokenAddress);
 
         Bid memory bid = bidByOrderId[_nftAddress][_orderId];
 
@@ -309,6 +331,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
             _nftAddress,
             order.assetId,
             order.assetAmount,
+            order.payTokenAddress,
             _priceInWei
         );
     }
@@ -358,6 +381,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
     {
         // check order validity
         Order memory order = _getValidOrder(_nftAddress, _orderId);
+        IERC20 acceptedToken = IERC20(order.payTokenAddress);
 
         // item seller is the only allowed to accept a bid
         require(order.seller == msg.sender, "Marketplace: unauthorized sender");
@@ -389,6 +413,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
             _nftAddress,
             order.assetId,
             order.assetAmount,
+            order.payTokenAddress,
             _priceInWei
         );
     }
@@ -434,6 +459,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         address _nftAddress,
         uint256 _assetId,
         uint256 _assetAmount,
+        address _payTokenAddress,
         uint256 _priceInWei
     )
         internal
@@ -454,6 +480,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         emit OrderSuccessful(
             _orderId,
             _buyer,
+            _payTokenAddress,
             _priceInWei
         );
     }
@@ -467,6 +494,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
      * @param _expiresAt - Expiration time for the order
      */
     function _createOrder(
+        string memory _payTokenName,
         address _nftAddress,
         uint256 _assetId,
         uint256 _assetAmount,
@@ -475,6 +503,9 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
     )
         internal
     {
+        // Check pay token
+        require(payTokens[_payTokenName] != ADDRESS_NULL, "not support this address pay token");
+
         // Check nft registry
         IERC1155 nftRegistry = _requireERC1155(_nftAddress);
 
@@ -482,8 +513,8 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         uint256 assetOwnerBalance = nftRegistry.balanceOf(msg.sender, _assetId);
 
         require(
-            assetOwnerBalance > 0,
-            "Marketplace: Only the asset owner balance should be bigger than 0"
+            assetOwnerBalance >= _assetAmount,
+            "Marketplace: Only the asset owner balance should be bigger than _assetAmount"
         );
 
         require(_priceInWei > 0, "Marketplace: Price should be bigger than 0");
@@ -517,6 +548,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         // save order
         orderByOrderId[_nftAddress][orderId] = Order({
             id: orderId,
+            payTokenAddress: payTokens[_payTokenName],
             seller: msg.sender,
             nftAddress: _nftAddress,
             assetId: _assetId,
@@ -529,6 +561,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
 
         emit OrderCreated(
             orderId,
+            payTokens[_payTokenName],
             msg.sender,
             _nftAddress,
             _assetId,
@@ -558,6 +591,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
     {
         // Checks order validity
         Order memory order = _getValidOrder(_nftAddress, _orderId);
+        IERC20 acceptedToken = IERC20(order.payTokenAddress);
 
         // check on expire time
         if (_expiresAt > order.expiresAt) {
@@ -623,6 +657,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
             _assetId,
             _assetAmount,
             msg.sender, // bidder
+            order.payTokenAddress,
             _priceInWei,
             _expiresAt
         );
@@ -679,6 +714,13 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
     )
         internal
     {
+        // Get the current valid order for the asset or fail
+        Order memory order = _getValidOrder(
+            _nftAddress,
+            _orderId
+        );
+        IERC20 acceptedToken = IERC20(order.payTokenAddress);
+
         delete bidByOrderId[_nftAddress][_orderId];
 
         // return escrow to canceled bidder
