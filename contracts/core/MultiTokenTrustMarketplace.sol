@@ -39,7 +39,7 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
     bytes4 public constant _INTERFACE_ID_ERC1155 = 0xd9b67a26;
 
     /* All the order id are stored here */
-    bytes32[] public orderIds;
+    bytes32[] private orderIds;
 
     // current order size
     uint256 private _orderSize = 0;
@@ -426,6 +426,13 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         return _orderSize;
     }
 
+    /**
+     * @dev value of orderId
+     * @return uint256 for the _orderIndex
+     */
+    function getOrderId(uint256 _orderIndex) public view returns (bytes32) {
+        return orderIds[_orderIndex];
+    }
 
     /**
      * @dev Internal function gets Order by nftRegistry and assetId. Checks for the order validity
@@ -540,7 +547,6 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
                 msg.sender,
                 _nftAddress,
                 _assetId,
-                _assetAmount,
                 _priceInWei
             )
         );
@@ -548,11 +554,11 @@ contract MultiTokenTrustMarketplace is Ownable, Pausable, FeeManager, IMultiToke
         // save order
         orderByOrderId[_nftAddress][orderId] = Order({
             id: orderId,
-            payTokenAddress: payTokens[_payTokenName],
             seller: msg.sender,
             nftAddress: _nftAddress,
             assetId: _assetId,
             assetAmount: _assetAmount,
+            payTokenAddress: payTokens[_payTokenName],
             price: _priceInWei,
             expiresAt: _expiresAt
         });

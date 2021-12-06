@@ -6,8 +6,6 @@ interface IMultiTokenTrustMarketplace {
     struct Order {
         // Order ID
         bytes32 id;
-        // pay token address
-        address payTokenAddress;
         // Owner of the NFT
         address seller;
         // NFT registry address
@@ -16,6 +14,8 @@ interface IMultiTokenTrustMarketplace {
         uint256 assetId;
         // NFT assetAmount
         uint256 assetAmount;
+        // pay token address
+        address payTokenAddress;
         // Price (in wei) for the published item
         uint256 price;
         // Time when this sale ends
