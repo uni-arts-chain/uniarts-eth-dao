@@ -99,6 +99,8 @@ type TrustMarketplaceOrder @entity {
   buyer: Bytes # address
   nft_address: Bytes! # address
   token_id: BigInt!
+  token_amount: BigInt
+  pay_token_address: Bytes # address
   price_in_wei: BigInt!
   expires_at: BigInt!
   is_succ: BigInt!
@@ -112,7 +114,9 @@ type TrustMarketplaceBid @entity {
   id: ID!
   nft_address: Bytes! # address
   token_id: BigInt!
+  token_amount: BigInt
   bidder: Bytes! # address
+  pay_token_address: Bytes # address
   price_in_wei: BigInt!
   expires_at: BigInt!
   tx_hash: String! # tx_hash
