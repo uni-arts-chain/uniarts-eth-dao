@@ -100,11 +100,13 @@ UniArts is also developing its substrate based main-net with EVMs based smart co
 
 - MerkleDistributor: 0x129078fB21E15c8F3e6B796135eaB9E24dcf8Eb2
 
-- UniArtsSouvenirs: 0x9042bDB2cf276764C0BEe227Eb3Bd9fE412ABaB8
+- UniArtsSouvenirs: 0x08ebD23cB3Ba8A11c42dD73B733fcc2a0fB4213C
 
 - USDC: 0xFd9CA9e22bd54260B87834966d26055620aFdbFf
 
 - MultiTokenAuction: 0xA90b49664918c2bA11ADb57975f3e86e8200D668
+
+- MultiTokenTrustMarketplace: 0x4a7Eb7C858512C5F622fF08FF9348bc4E5af7Ad0
 
 # Indexing Services
 

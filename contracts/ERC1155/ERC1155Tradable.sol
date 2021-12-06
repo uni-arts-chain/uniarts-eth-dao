@@ -213,11 +213,10 @@ contract ERC1155Tradable is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
      */
     function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {
         // Whitelist OpenSea proxy contract for easy trading.
-        ProxyRegistry proxyRegistry = ProxyRegistry(proxyRegistryAddress);
-        if (address(proxyRegistry.proxies(account)) == operator) {
-            return true;
-        }
-
+        // ProxyRegistry proxyRegistry = ProxyRegistry(proxyRegistryAddress);
+        // if (address(proxyRegistry.proxies(account)) == operator) {
+        //     return true;
+        // }
         return _operatorApprovals[account][operator];
     }
 

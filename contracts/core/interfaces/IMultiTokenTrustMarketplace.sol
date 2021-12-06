@@ -14,6 +14,8 @@ interface IMultiTokenTrustMarketplace {
         uint256 assetId;
         // NFT assetAmount
         uint256 assetAmount;
+        // pay token address
+        address payTokenAddress;
         // Price (in wei) for the published item
         uint256 price;
         // Time when this sale ends
@@ -34,9 +36,10 @@ interface IMultiTokenTrustMarketplace {
     // ORDER EVENTS
     event OrderCreated(
         bytes32 id,
+        address indexed payTokenAddress,
         address indexed seller,
         address indexed nftAddress,
-        uint256 indexed assetId,
+        uint256 assetId,
         uint256 assetAmount,
         uint256 priceInWei,
         uint256 expiresAt
@@ -44,6 +47,7 @@ interface IMultiTokenTrustMarketplace {
 
     event OrderUpdated(
         bytes32 id,
+        address payTokenAddress,
         uint256 priceInWei,
         uint256 expiresAt
     );
@@ -51,7 +55,8 @@ interface IMultiTokenTrustMarketplace {
     event OrderSuccessful(
         bytes32 id,
         address indexed buyer,
-        uint256 priceInWei
+        address indexed payTokenAddress,
+        uint256 indexed priceInWei
     );
 
     event OrderCancelled(bytes32 id);
@@ -63,10 +68,12 @@ interface IMultiTokenTrustMarketplace {
       uint256 indexed assetId,
       uint256 assetAmount,
       address indexed bidder,
+      address payTokenAddress,
       uint256 priceInWei,
       uint256 expiresAt
     );
 
     event BidAccepted(bytes32 id);
     event BidCancelled(bytes32 id);
+    event SetNewPayToken(string tokenName, address tokenAddress);
 }
