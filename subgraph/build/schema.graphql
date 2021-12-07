@@ -71,6 +71,8 @@ type AuctionList @entity {
   tokenIndex: BigInt!
   nft_contract_address: Bytes! # address
   nft_token_id: BigInt!
+  nft_token_amount: BigInt
+  pay_token_address: Bytes # address
   nft_min_bid: BigInt!
   nft_fixed_price: BigInt!
 }
@@ -82,6 +84,7 @@ type AuctionBidList @entity {
   playerAddress: Bytes! # address
   tokenIndex: BigInt!
   bid: BigInt!
+  pay_token_address: Bytes # address
   expiryBlock: BigInt!
 }
 

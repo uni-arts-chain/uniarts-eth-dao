@@ -170,6 +170,50 @@ dataSources:
           handler: handleURI
       file: UniArtsSouvenirs/UniArtsSouvenirs.wasm
   - kind: ethereum/contract
+    name: MultiTokenAuction
+    network: rinkeby
+    source:
+      address: "0xA90b49664918c2bA11ADb57975f3e86e8200D668"
+      abi: MultiTokenAuction
+      startBlock: 9748623
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - ChangedFeePerMillion
+        - CreateAuctionEvent
+        - CreatorWithdrawProfit
+        - OwnershipTransferred
+        - PlayerBidEvent
+        - PlayerWithdrawBid
+        - ProcessWithdrawNft
+        - RewardEvent
+        - SetNewPayToken
+      abis:
+        - name: MultiTokenAuction
+          file: MultiTokenAuction/abis/MultiTokenAuction.json
+      eventHandlers:
+        - event: ChangedFeePerMillion(uint256)
+          handler: handleChangedFeePerMillion
+        - event: CreateAuctionEvent(address,string,address,uint96,uint96,uint96,uint32,uint256,(address,uint256,uint256,uint256,uint256))
+          handler: handleCreateAuctionEvent
+        - event: CreatorWithdrawProfit(address,address,uint256)
+          handler: handleCreatorWithdrawProfit
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: PlayerBidEvent(string,address,uint256,address,uint256,uint96)
+          handler: handlePlayerBidEvent
+        - event: PlayerWithdrawBid(string,uint256)
+          handler: handlePlayerWithdrawBid
+        - event: ProcessWithdrawNft(string,uint256)
+          handler: handleProcessWithdrawNft
+        - event: RewardEvent(string,uint256,address)
+          handler: handleRewardEvent
+        - event: SetNewPayToken(string,address)
+          handler: handleSetNewPayToken
+      file: MultiTokenAuction/MultiTokenAuction.wasm
+  - kind: ethereum/contract
     name: MultiTokenTrustMarketplace
     network: rinkeby
     source:
