@@ -663,6 +663,24 @@ export class AuctionList extends Entity {
     this.set("nft_token_id", Value.fromBigInt(value));
   }
 
+  get nft_token_amount(): BigInt {
+    let value = this.get("nft_token_amount");
+    return value.toBigInt();
+  }
+
+  set nft_token_amount(value: BigInt) {
+    this.set("nft_token_amount", Value.fromBigInt(value));
+  }
+
+  get pay_token_address(): Bytes {
+    let value = this.get("pay_token_address");
+    return value.toBytes();
+  }
+
+  set pay_token_address(value: Bytes) {
+    this.set("pay_token_address", Value.fromBytes(value));
+  }
+
   get nft_min_bid(): BigInt {
     let value = this.get("nft_min_bid");
     return value.toBigInt();
@@ -746,6 +764,15 @@ export class AuctionBidList extends Entity {
 
   set tokenIndex(value: BigInt) {
     this.set("tokenIndex", Value.fromBigInt(value));
+  }
+
+  get pay_token_address(): Bytes {
+    let value = this.get("pay_token_address");
+    return value.toBytes();
+  }
+
+  set pay_token_address(value: Bytes) {
+    this.set("pay_token_address", Value.fromBytes(value));
   }
 
   get bid(): BigInt {
