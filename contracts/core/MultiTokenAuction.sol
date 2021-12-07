@@ -6,13 +6,16 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./FeeManager.sol";
 
-contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165, Ownable {
+contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165, Ownable, FeeManager {
 
     // using safeErc20 for ierc20 based contract
     using SafeERC20 for IERC20;
+    using SafeMath for uint256;
 
     // constants
     address constant ADDRESS_NULL             = 0x0000000000000000000000000000000000000000;
@@ -351,19 +354,31 @@ contract MultiTokenAuction is ReentrancyGuard, IERC1155Receiver, ERC165, Ownable
         require(payTokens[payTokenName] != ADDRESS_NULL, "not support this address pay token");
         address payTokenAddress = payTokens[payTokenName];
 
-        uint balance = creatorBalance[msg.sender][payTokenAddress];
+        uint256 balance = creatorBalance[msg.sender][payTokenAddress];
         require(balance > 0, "creator balance must be greater than 0");
         
         // reset balance 
         creatorBalance[msg.sender][payTokenAddress] = 0;
         
-        // send money
-        IERC20(payTokenAddress).safeTransfer(msg.sender, balance);
+        // market fee to cut
+        uint256 saleShareAmount = 0;
+
+        // Send market fees to owner
+        if (FeeManager.cutPerMillion > 0) {
+            // Calculate sale share
+            saleShareAmount = balance.mul(FeeManager.cutPerMillion).div(1e6);
+
+            // Transfer share amount for marketplace Owner
+            IERC20(payTokenAddress).safeTransfer(owner(), saleShareAmount);
+        }
+
+
+        // send money to creator
+        IERC20(payTokenAddress).safeTransfer(msg.sender, balance.sub(saleShareAmount));
         // emit events
         // event CreatorWithdrawProfit(address creatorAddress, uint256 balance);
-        emit CreatorWithdrawProfit(msg.sender, payTokenAddress, balance);
+        emit CreatorWithdrawProfit(msg.sender, payTokenAddress, balance.sub(saleShareAmount));
     }
-
 
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
