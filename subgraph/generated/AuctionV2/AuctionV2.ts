@@ -108,6 +108,28 @@ export class PlayerBidEvent__Params {
   }
 }
 
+export class ProcessWithdrawNft extends ethereum.Event {
+  get params(): ProcessWithdrawNft__Params {
+    return new ProcessWithdrawNft__Params(this);
+  }
+}
+
+export class ProcessWithdrawNft__Params {
+  _event: ProcessWithdrawNft;
+
+  constructor(event: ProcessWithdrawNft) {
+    this._event = event;
+  }
+
+  get matchId(): string {
+    return this._event.parameters[0].value.toString();
+  }
+
+  get tokenIndex(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
 export class RewardEvent extends ethereum.Event {
   get params(): RewardEvent__Params {
     return new RewardEvent__Params(this);
