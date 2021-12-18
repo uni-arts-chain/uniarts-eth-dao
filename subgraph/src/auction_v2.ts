@@ -11,7 +11,8 @@ import { AuctionList, AuctionBidList, AuctionRewardList } from "../generated/sch
 export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
   let matchId = event.params.matchId
   let tokenIndex = event.params.tokenIndex
-  let id = matchId.toString() + '_' + tokenIndex.toString()
+  let contractAddress = event.transaction.to.toHex()
+  let id = contractAddress + '_' + matchId.toString() + '_' + tokenIndex.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
@@ -36,8 +37,9 @@ export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
 
 export function handlePlayerBidEvent(event: PlayerBidEvent): void {
   let matchId = event.params.matchId
-  let tokenIndex = event.params.tokenIndex 
-  let id = matchId.toString() + '_' + tokenIndex.toString()
+  let tokenIndex = event.params.tokenIndex
+  let contractAddress = event.transaction.to.toHex()
+  let id = contractAddress + '_' + matchId.toString() + '_' + tokenIndex.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
@@ -55,7 +57,8 @@ export function handlePlayerBidEvent(event: PlayerBidEvent): void {
 export function handleRewardEvent(event: RewardEvent): void {
   let matchId = event.params.matchId
   let tokenIndex = event.params.tokenIndex
-  let id = matchId.toString() + '_' + tokenIndex.toString()
+  let contractAddress = event.transaction.to.toHex()
+  let id = contractAddress + '_' + matchId.toString() + '_' + tokenIndex.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
@@ -71,8 +74,9 @@ export function handleRewardEvent(event: RewardEvent): void {
 export function handleProcessWithdrawNft(event: ProcessWithdrawNft): void {
   let matchId = event.params.matchId
   let tokenIndex = event.params.tokenIndex
+  let contractAddress = event.transaction.to.toHex()
+  let id = contractAddress + '_' + matchId.toString() + '_' + tokenIndex.toString()
   let block_number = event.block.number
-  let id = matchId.toString() + '_' + tokenIndex.toString()
   let entity = AuctionList.load(id)
   if (entity !== null) {
     entity.cancel_block_number = block_number
