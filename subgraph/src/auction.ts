@@ -21,6 +21,7 @@ export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
   entity.matchId = event.params.matchId
   entity.openBlock = event.params.openBlock
   entity.expiryBlock = event.params.expiryBlock
+  entity.cancel_block_number = BigInt.fromI32(0)
   entity.increment = event.params.increment
   entity.expiryExtension = event.params.expiryExtension
   entity.tokenIndex = event.params.tokenIndex
