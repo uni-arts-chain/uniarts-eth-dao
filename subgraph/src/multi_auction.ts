@@ -47,8 +47,9 @@ export function handleChangedFeePerMillion(event: ChangedFeePerMillion): void {
 }
 
 export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
+  let matchId = event.params.matchId
   let tokenIndex = event.params.tokenIndex
-  let id = event.transaction.hash.toHex() + '_' + tokenIndex.toString()
+  let id = matchId.toString() + '_' + tokenIndex.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
@@ -60,6 +61,7 @@ export function handleCreateAuctionEvent(event: CreateAuctionEvent): void {
   entity.matchId = event.params.matchId
   entity.openBlock = event.params.openBlock
   entity.expiryBlock = event.params.expiryBlock
+  entity.cancel_block_number = BigInt.fromI32(0)
   entity.increment = event.params.increment
   entity.expiryExtension = event.params.expiryExtension
   entity.tokenIndex = event.params.tokenIndex
@@ -80,8 +82,8 @@ export function handleOwnershipTransferred(event: OwnershipTransferred): void {}
 
 export function handlePlayerBidEvent(event: PlayerBidEvent): void {
   let matchId = event.params.matchId
-  let tokenIndex = event.params.tokenIndex 
-  let id = event.transaction.hash.toHex() + '_' + matchId.toString() + '_' + tokenIndex.toString()
+  let tokenIndex = event.params.tokenIndex
+  let id =  matchId.toString() + '_' + tokenIndex.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
@@ -99,12 +101,22 @@ export function handlePlayerBidEvent(event: PlayerBidEvent): void {
 
 export function handlePlayerWithdrawBid(event: PlayerWithdrawBid): void {}
 
-export function handleProcessWithdrawNft(event: ProcessWithdrawNft): void {}
+export function handleProcessWithdrawNft(event: ProcessWithdrawNft): void {
+  let matchId = event.params.matchId
+  let tokenIndex = event.params.tokenIndex
+  let block_number = event.block.number
+  let id = matchId.toString() + '_' + tokenIndex.toString()
+  let entity = AuctionList.load(id)
+  if (entity !== null) {
+    entity.cancel_block_number = block_number
+    entity.save()
+  }
+}
 
 export function handleRewardEvent(event: RewardEvent): void {
   let matchId = event.params.matchId
   let tokenIndex = event.params.tokenIndex 
-  let id = event.transaction.hash.toHex() + '_' + matchId.toString() + '_' + tokenIndex.toString()
+  let id = matchId.toString() + '_' + tokenIndex.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand

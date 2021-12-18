@@ -609,6 +609,15 @@ export class AuctionList extends Entity {
     this.set("openBlock", Value.fromBigInt(value));
   }
 
+  get cancel_block_number(): BigInt {
+    let value = this.get("cancel_block_number");
+    return value.toBigInt();
+  }
+
+  set cancel_block_number(value: BigInt) {
+    this.set("cancel_block_number", Value.fromBigInt(value));
+  }
+
   get expiryBlock(): BigInt {
     let value = this.get("expiryBlock");
     return value.toBigInt();
