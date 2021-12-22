@@ -119,6 +119,12 @@ contract ERC1155Tradable is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
         return _id;
     }
 
+    function setBaseURI(string memory newBase) public {
+        // Only admin can setBaseURI
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Caller is not a admin");
+        _setURI(newBase);
+    }
+
     /**
      * @dev See {IERC165-supportsInterface}.
      */
