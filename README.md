@@ -66,6 +66,10 @@ UniArts is also developing its substrate based main-net with EVMs based smart co
 
 - PinV2: 0xb4873626519754185FF5a8A368D442230645e524
 
+- UniArtsSouvenirs: 0x1689eF902B72068Ba1E18b3831fDeFf71aD2137D
+
+- USDC: 0x2791bca1f2de4661ed88a30c99a7a9449aa84174
+
 ### Rinkeby Testnet
 
 - UART: 0xf51D9714b74644a224E7f62E56D4A87e1f1fb2E0
