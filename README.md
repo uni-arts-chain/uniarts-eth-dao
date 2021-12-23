@@ -88,11 +88,11 @@ UniArts is also developing its substrate based main-net with EVMs based smart co
 
 - USDC: 0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d
 
-- Auction: 0x03028ca721E0fc26bD0279B3f2Be9473DdAa2806
+- Auction: 
 
 - AuctionV2: 0x03028ca721E0fc26bD0279B3f2Be9473DdAa2806
 
-- TrustMarketplace: 0xdE55Bf6319fE45437D7E9978b316fA43f83fA7Db
+- TrustMarketplace: 
 
 - TrustMarketplaceV2: 0xdE55Bf6319fE45437D7E9978b316fA43f83fA7Db
 
@@ -100,17 +100,17 @@ UniArts is also developing its substrate based main-net with EVMs based smart co
 
 - VoteMining: 
 
-- VoteMiningV2: 
+- VoteMiningV2: 0x7610844a9424f2Fcd9FdF84536CD126335137DE8
 
 - Pin: 
 
-- PinV2: 
+- PinV2: 0x90A71F2e271E3990A3f0F1A31E532519385a6041
 
-- UniArtsSouvenirs: 
+- UniArtsSouvenirs: 0xc7706dB4FDf19Da9C2B1A012233709Dc19AE4400
 
-- MultiTokenAuction: 
+- MultiTokenAuction: 0x88A35764849140a662Ee30379Eb42693Bd0A4eF1
 
-- MultiTokenTrustMarketplace: 
+- MultiTokenTrustMarketplace: 0xA198d4814773C298266467D43dA1d12183E429Cc
 
 ### Rinkeby Testnet
 
