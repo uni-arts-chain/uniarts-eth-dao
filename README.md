@@ -70,6 +70,10 @@ UniArts is also developing its substrate based main-net with EVMs based smart co
 
 - USDC: 0x2791bca1f2de4661ed88a30c99a7a9449aa84174
 
+- MultiTokenAuction: 0xBfe85b980FDcFe5c4116d2759B85afb13473a538
+
+- MultiTokenTrustMarketplace: 0x53d5881C315e416DDcEEF2c7c516B287a4821053
+
 ### Rinkeby Testnet
 
 - UART: 0xf51D9714b74644a224E7f62E56D4A87e1f1fb2E0
