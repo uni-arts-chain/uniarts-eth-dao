@@ -4,11 +4,11 @@ schema:
 dataSources:
   - kind: ethereum/contract
     name: UniArtsNFT
-    network: rinkeby
+    network: bsc
     source:
-      address: "0x5F48872D2F81d555c287F1dc2379B6E5fe1346C8"
+      address: "0xB45Ab2c716f414C46c429fcCC9D85D34dB7d5b46"
       abi: UniArtsNFT
-      startBlock: 9307457
+      startBlock: 13713710
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -38,38 +38,12 @@ dataSources:
           handler: handleTransfer
       file: ./src/mapping.ts
   - kind: ethereum/contract
-    name: Auction
-    network: rinkeby
-    source:
-      address: "0x3415d9823EE52A8C21cd77C138c3774B44C9196D"
-      abi: Auction
-      startBlock: 9307457
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.4
-      language: wasm/assemblyscript
-      entities:
-        - CreateAuctionEvent
-        - PlayerBidEvent
-        - RewardEvent
-      abis:
-        - name: Auction
-          file: ./abis/Auction.json
-      eventHandlers:
-        - event: CreateAuctionEvent(address,string,uint96,uint96,uint96,uint32,uint256,(address,uint256,uint256,uint256))
-          handler: handleCreateAuctionEvent
-        - event: PlayerBidEvent(string,address,uint256,uint256,uint96)
-          handler: handlePlayerBidEvent
-        - event: RewardEvent(string,uint256,address)
-          handler: handleRewardEvent
-      file: ./src/auction.ts
-  - kind: ethereum/contract
     name: AuctionV2
-    network: rinkeby
+    network: bsc
     source:
-      address: "0x1C5E7e66406aA3dc1cf8d9DBb7BDD60669CC015d"
+      address: "0x03028ca721E0fc26bD0279B3f2Be9473DdAa2806"
       abi: Auction
-      startBlock: 9611278
+      startBlock: 13714000
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -89,14 +63,16 @@ dataSources:
           handler: handlePlayerBidEvent
         - event: RewardEvent(string,uint256,address)
           handler: handleRewardEvent
+        - event: ProcessWithdrawNft(string,uint256)
+          handler: handleProcessWithdrawNft
       file: ./src/auction_v2.ts
   - kind: ethereum/contract
     name: TrustMarketplace
-    network: rinkeby
+    network: bsc
     source:
-      address: "0x061236A338FDE12f5c0d4dce33B27A4D9fD8E604"
+      address: "0xdE55Bf6319fE45437D7E9978b316fA43f83fA7Db"
       abi: TrustMarketplace
-      startBlock: 9611295
+      startBlock: 13714062
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -142,11 +118,11 @@ dataSources:
       file: ./src/trust_marketplace.ts
   - kind: ethereum/contract
     name: UniArtsSouvenirs
-    network: rinkeby
+    network: bsc
     source:
-      address: "0x08ebD23cB3Ba8A11c42dD73B733fcc2a0fB4213C"
+      address: "0xc7706dB4FDf19Da9C2B1A012233709Dc19AE4400"
       abi: UniArtsSouvenirs
-      startBlock: 9765570
+      startBlock: 13714773
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -171,11 +147,11 @@ dataSources:
       file: ./src/souvenirs.ts
   - kind: ethereum/contract
     name: MultiTokenAuction
-    network: rinkeby
+    network: bsc
     source:
-      address: "0xA90b49664918c2bA11ADb57975f3e86e8200D668"
+      address: "0x88A35764849140a662Ee30379Eb42693Bd0A4eF1"
       abi: MultiTokenAuction
-      startBlock: 9748623
+      startBlock: 13714844
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -215,11 +191,11 @@ dataSources:
       file: ./src/multi_auction.ts
   - kind: ethereum/contract
     name: MultiTokenTrustMarketplace
-    network: rinkeby
+    network: bsc
     source:
-      address: "0x4a7Eb7C858512C5F622fF08FF9348bc4E5af7Ad0"
+      address: "0xA198d4814773C298266467D43dA1d12183E429Cc"
       abi: MultiTokenTrustMarketplace
-      startBlock: 9765147
+      startBlock: 13714887
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
