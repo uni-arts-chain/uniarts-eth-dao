@@ -197,6 +197,16 @@ Queries (HTTP):     https://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao
 
 Subscriptions (WS): wss://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao
 
+## BSC Mainnet
+
+Deployed to https://thegraph.com/explorer/subgraph/tuminfei/uniarts-dao-bsc
+
+Subgraph endpoints:
+
+Queries (HTTP):     https://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao-bsc
+
+Subscriptions (WS): wss://api.thegraph.com/subgraphs/name/tuminfei/uniarts-dao-bsc
+
 ## Rinkeby Testnet
 
 Deployed to https://thegraph.com/explorer/subgraph/tuminfei/uniarts-dao-rinkeby
