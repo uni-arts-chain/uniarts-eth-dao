@@ -74,6 +74,44 @@ UniArts is also developing its substrate based main-net with EVMs based smart co
 
 - MultiTokenTrustMarketplace: 0x53d5881C315e416DDcEEF2c7c516B287a4821053
 
+### BSC Mainnet
+
+- UART: 0x5608D5159ab98881bc116ae7761c74Ad2eBb0448
+
+- TokenLocker: 0x8B5eEe4A93ed2929195257C16D1Ad4fb750f2d27
+
+- UniartsNFT: 0xB45Ab2c716f414C46c429fcCC9D85D34dB7d5b46
+
+- USDT: 0x55d398326f99059fF775485246999027B3197955
+
+- WETH: 0x2170ed0880ac9a755fd29b2688956bd959f933f8
+
+- USDC: 0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d
+
+- Auction: 0x03028ca721E0fc26bD0279B3f2Be9473DdAa2806
+
+- AuctionV2: 0x03028ca721E0fc26bD0279B3f2Be9473DdAa2806
+
+- TrustMarketplace: 0xdE55Bf6319fE45437D7E9978b316fA43f83fA7Db
+
+- TrustMarketplaceV2: 0xdE55Bf6319fE45437D7E9978b316fA43f83fA7Db
+
+- UartTreasury: 0x530dFed433F889C025dc41d3d2e7E5Cd4e5B1268
+
+- VoteMining: 
+
+- VoteMiningV2: 
+
+- Pin: 
+
+- PinV2: 
+
+- UniArtsSouvenirs: 
+
+- MultiTokenAuction: 
+
+- MultiTokenTrustMarketplace: 
+
 ### Rinkeby Testnet
 
 - UART: 0xf51D9714b74644a224E7f62E56D4A87e1f1fb2E0
