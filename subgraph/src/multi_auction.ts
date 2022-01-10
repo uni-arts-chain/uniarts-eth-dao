@@ -85,13 +85,14 @@ export function handlePlayerBidEvent(event: PlayerBidEvent): void {
   let matchId = event.params.matchId
   let tokenIndex = event.params.tokenIndex
   let contractAddress = event.transaction.to.toHex()
-  let id = contractAddress + '_' + matchId.toString() + '_' + tokenIndex.toString()
+  // let id = contractAddress + '_' + matchId.toString() + '_' + tokenIndex.toString()
+  let id = event.transaction.hash.toHex() + '_' + matchId.toString() + '_' + tokenIndex.toString()
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
   let entity = new AuctionBidList(id)
 
-  entity.contractAddress = event.transaction.to.toHex()
+  entity.contractAddress = contractAddress
   entity.matchId = event.params.matchId
   entity.playerAddress = event.params.playerAddress
   entity.pay_token_address = event.params.payTokenAddress
