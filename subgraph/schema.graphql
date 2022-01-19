@@ -127,6 +127,14 @@ type TrustMarketplaceBid @entity {
   block_number: BigInt!
 }
 
+type TokenPin @entity {
+  id: ID!
+  user_address: Bytes! # address
+  nft_address: Bytes!  # address
+  token_id: BigInt!
+  block_number: BigInt!
+}
+
 type MultiTokenAccount @entity {
 	id:                           ID!
 	balances:                     [MultiTokenBalance!]! @derivedFrom(field: "account")
