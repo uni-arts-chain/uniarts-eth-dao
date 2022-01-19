@@ -1859,12 +1859,6 @@ export class TokenPin extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
-
-    this.set("user_address", Value.fromBytes(Bytes.empty()));
-    this.set("nft_address", Value.fromBytes(Bytes.empty()));
-    this.set("token_id", Value.fromBigInt(BigInt.zero()));
-    this.set("tx_hash", Value.fromString(""));
-    this.set("block_number", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {
@@ -1881,7 +1875,7 @@ export class TokenPin extends Entity {
   }
 
   static load(id: string): TokenPin | null {
-    return changetype<TokenPin | null>(store.get("TokenPin", id));
+    return store.get("TokenPin", id) as TokenPin | null;
   }
 
   get id(): string {
