@@ -78,6 +78,7 @@ dataSources:
         - CreateAuctionEvent
         - PlayerBidEvent
         - RewardEvent
+        - ProcessWithdrawNft
       abis:
         - name: Auction
           file: ./abis/AuctionV2.json
@@ -88,6 +89,8 @@ dataSources:
           handler: handlePlayerBidEvent
         - event: RewardEvent(string,uint256,address)
           handler: handleRewardEvent
+        - event: ProcessWithdrawNft(string,uint256)
+          handler: handleProcessWithdrawNft
       file: ./src/auction_v2.ts
   - kind: ethereum/contract
     name: TrustMarketplace
@@ -265,3 +268,26 @@ dataSources:
         - event: Unpaused(address)
           handler: handleUnpaused
       file: ./src/multi_trust_marketplace.ts
+  - kind: ethereum
+    name: Pin
+    network: rinkeby
+    source:
+      address: "0x2465BF5D1B2AEf9908A3F7EDb01F14740186EeD5"
+      abi: Pin
+      startBlock: 9568012
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - OwnershipTransferred
+        - Pinned
+      abis:
+        - name: Pin
+          file: ./abis/Pin.json
+      eventHandlers:
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: Pinned(indexed address,address,uint256)
+          handler: handlePinned
+      file: ./src/pin.ts
