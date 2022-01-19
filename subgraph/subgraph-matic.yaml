@@ -268,3 +268,26 @@ dataSources:
         - event: Unpaused(address)
           handler: handleUnpaused
       file: ./src/multi_trust_marketplace.ts
+  - kind: ethereum
+    name: Pin
+    network: matic
+    source:
+      address: "0xb4873626519754185FF5a8A368D442230645e524"
+      abi: Pin
+      startBlock: 21237688
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - OwnershipTransferred
+        - Pinned
+      abis:
+        - name: Pin
+          file: ./abis/Pin.json
+      eventHandlers:
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: Pinned(indexed address,address,uint256)
+          handler: handlePinned
+      file: ./src/pin.ts
