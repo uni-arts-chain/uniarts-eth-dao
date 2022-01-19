@@ -5,6 +5,7 @@ npx truffle-flattener contracts/VoteMining.sol > flatten/VoteMining.sol
 npx truffle-flattener contracts/VoteMiningV2.sol > flatten/VoteMiningV2.sol
 npx truffle-flattener contracts/Pin.sol > flatten/Pin.sol
 npx truffle-flattener contracts/ERC721/UniArtsNFT.sol > flatten/UniArtsNFT.sol
+npx truffle-flattener contracts/ERC721/UniArtsDaoNFT.sol > flatten/UniArtsDaoNFT.sol
 npx truffle-flattener contracts/core/Marketplace.sol > flatten/Marketplace.sol
 npx truffle-flattener contracts/core/Auction.sol > flatten/Auction.sol 
 npx truffle-flattener contracts/core/AuctionV2.sol > flatten/AuctionV2.sol 
