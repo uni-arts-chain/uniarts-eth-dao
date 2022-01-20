@@ -11,15 +11,22 @@ contract UniArtsDaoNFT is ERC721, ERC721Enumerable, AccessControl {
 
   // Create a new role identifier for the minter role
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+  // Create a new role identifier for the minter role
+  bytes32 public constant MERKLE_ROLE = keccak256("MERKLE_ROLE");
 
   string _baseURIValue;
 
   // current TokenID
-  uint256 private _currentTokenID = 0;
+  uint256 private _reservedMaxCount = 5000;
+  uint256 private _reservedTokenID = 0;
+
+  // current TokenID
+  uint256 private _currentTokenID = _reservedMaxCount + 1;
 
   constructor(address minter, string memory baseURIValue_) ERC721("UniArtsNFT", "UANFT") {
     // Grant the minter role to a specified account
     _setupRole(MINTER_ROLE, minter);
+    _setupRole(MERKLE_ROLE, minter);
     _setupRole(DEFAULT_ADMIN_ROLE, minter);
     _baseURIValue = baseURIValue_;
   }
@@ -48,6 +55,19 @@ contract UniArtsDaoNFT is ERC721, ERC721Enumerable, AccessControl {
     _mint(user_address, tokenId);
   }
 
+  function createMerkleNFT(address user_address) external returns (bool) {
+    // Only minters can mint
+    // Check that the calling account has the minter role
+    require(hasRole(MERKLE_ROLE, msg.sender), "Caller is not a merkle minter");
+
+    require(_reservedTokenID <= _reservedMaxCount, "Reserved Max Count");
+
+    uint256 tokenId = _getReservedNextTokenID();
+    _incrementReservedTokenId();
+    _mint(user_address, tokenId);
+    return true;
+  }
+
   function batchMint(address user_address, uint mint_count) external {
     // Only minters can mint
     // Check that the calling account has the minter role
@@ -72,6 +92,14 @@ contract UniArtsDaoNFT is ERC721, ERC721Enumerable, AccessControl {
     * @dev calculates the next token ID based on value of _currentTokenID
     * @return uint256 for the next token ID
     */
+  function _getReservedNextTokenID() private view returns (uint256) {
+      return _reservedTokenID.add(1);
+  }
+
+  /**
+    * @dev calculates the next token ID based on value of _currentTokenID
+    * @return uint256 for the next token ID
+    */
   function _getNextTokenID() private view returns (uint256) {
       return _currentTokenID.add(1);
   }
@@ -81,6 +109,13 @@ contract UniArtsDaoNFT is ERC721, ERC721Enumerable, AccessControl {
     */
   function _incrementTokenTypeId() private  {
       _currentTokenID++;
+  }
+
+  /**
+    * @dev increments the value of _reservedTokenID
+    */
+  function _incrementReservedTokenId() private  {
+      _reservedTokenID++;
   }
 
   /**
