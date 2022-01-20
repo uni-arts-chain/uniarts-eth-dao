@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IERC721Merkle.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "./interfaces/IMerkleMint.sol";
+import "./interfaces/IMerkleDistributor.sol";
 
-contract MerkleMint is IMerkleMint {
+contract MerkleMint is IMerkleDistributor {
     address public immutable override token;
     bytes32 public immutable override merkleRoot;
 
@@ -31,17 +31,17 @@ contract MerkleMint is IMerkleMint {
         claimedBitMap[claimedWordIndex] = claimedBitMap[claimedWordIndex] | (1 << claimedBitIndex);
     }
 
-    function claim(uint256 index, address account, bytes32[] calldata merkleProof) external override {
+    function claim(uint256 index, address account, uint256 amount, bytes32[] calldata merkleProof) external override {
         require(!isClaimed(index), 'MerkleMint: Drop already claimed.');
 
         // Verify the merkle proof.
-        bytes32 node = keccak256(abi.encodePacked(index, account));
+        bytes32 node = keccak256(abi.encodePacked(index, account, amount));
         require(MerkleProof.verify(merkleProof, merkleRoot, node), 'MerkleMint: Invalid proof.');
 
         // Mark it claimed and send the token.
         _setClaimed(index);
         require(IERC721Merkle(token).createMerkleNFT(account), 'MerkleMint: Transfer failed.');
 
-        emit Claimed(index, account);
+        emit Claimed(index, account, amount);
     }
 }
