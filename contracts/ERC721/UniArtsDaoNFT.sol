@@ -23,7 +23,7 @@ contract UniArtsDaoNFT is ERC721, ERC721Enumerable, AccessControl {
   // current TokenID
   uint256 private _currentTokenID = _reservedMaxCount + 1;
 
-  constructor(address minter, string memory baseURIValue_) ERC721("UniArtsNFT", "UANFT") {
+  constructor(address minter, string memory baseURIValue_) ERC721("UniArtsDaoNFT", "UADNFT") {
     // Grant the minter role to a specified account
     _setupRole(MINTER_ROLE, minter);
     _setupRole(MERKLE_ROLE, minter);
