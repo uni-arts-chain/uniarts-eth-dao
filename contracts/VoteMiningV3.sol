@@ -34,7 +34,7 @@ interface IVoteMiningV1 {
 }
 
 
-contract VoteMiningV2 is Ownable, ReentrancyGuard {
+contract VoteMiningV3 is Ownable, ReentrancyGuard {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 

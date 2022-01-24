@@ -122,6 +122,8 @@ UniArts is also developing its substrate based main-net with EVMs based smart co
 
 - VoteMiningV2: 0xD57D74eb869B0752Cda8835a55Bb0cB88BB99328
 
+- VoteMiningV3: 0x7748D5356cB1c50F2Cdbf1dAC8C296cf6df5fC9f
+
 - Pin: 0xe4FBc3A47868B4d420442875A4e2Ae1993C0c41d
 
 - PinV2: 0x2465BF5D1B2AEf9908A3F7EDb01F14740186EeD5
