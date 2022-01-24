@@ -63,7 +63,7 @@ contract VoteMiningV3 is Ownable, ReentrancyGuard {
 	// id => start time
 	mapping (uint => uint) public groups;
 	uint public currentGroupId = 1; // V2 starts from 1
-	uint public startGroupId = 1;
+	uint public startGroupId = 2;
 	// group id => matchId
 	mapping (uint => string) public matches;
 	// group id => finished or not
