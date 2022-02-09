@@ -160,6 +160,10 @@ UniArts is also developing its substrate based main-net with EVMs based smart co
 
 - MultiTokenTrustMarketplace: 0x4a7Eb7C858512C5F622fF08FF9348bc4E5af7Ad0
 
+- UniArtsDaoNFT: 0xBf6D6849F0CBb2aC2e8E928D287905dDba4C3fd6
+
+- MerkleMint: 0xaC947C726bC380E2ef6a49f74F47fF5C50c72508
+
 # Indexing Services
 
 ✔ Write compiled subgraph to build/
