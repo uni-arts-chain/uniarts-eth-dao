@@ -222,3 +222,9 @@ type PersistentString @entity {
 	id:                           ID!
 	value:                        String!
 }
+
+type TokenMint @entity {
+  id: ID!
+  user_address: Bytes! # address
+  amount: BigInt!
+}
