@@ -17,7 +17,7 @@ contract UniArtsDaoNFT is ERC721, ERC721Enumerable, AccessControl {
   string _baseURIValue;
 
   // current TokenID
-  uint256 private _reservedMaxCount = 5000;
+  uint256 private _reservedMaxCount = 500;
   uint256 private _reservedTokenID = 0;
 
   // current TokenID
