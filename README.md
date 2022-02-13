@@ -116,6 +116,10 @@ UniArts is also developing its substrate based main-net with EVMs based smart co
 
 - MultiTokenTrustMarketplace: 0xA198d4814773C298266467D43dA1d12183E429Cc
 
+- UniArtsDaoNFT: 0xee841a4982b69622a2bf89f9dba0e0cbdbcbde89
+
+- MerkleMint: 0x490d122135bf4aeb375e58d080ea8c583E148165
+
 ### Rinkeby Testnet
 
 - UART: 0xf51D9714b74644a224E7f62E56D4A87e1f1fb2E0
