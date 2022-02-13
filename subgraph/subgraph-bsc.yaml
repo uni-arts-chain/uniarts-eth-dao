@@ -265,3 +265,23 @@ dataSources:
         - event: Pinned(indexed address,address,uint256)
           handler: handlePinned
       file: ./src/pin.ts
+  - kind: ethereum/contract
+    name: MerkleMint
+    network: bsc
+    source:
+      address: "0x490d122135bf4aeb375e58d080ea8c583E148165"
+      abi: MerkleMint
+      startBlock: 15220136
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Claimed
+      abis:
+        - name: MerkleMint
+          file: ./abis/MerkleMint.json
+      eventHandlers:
+        - event: Claimed(uint256,address,uint256)
+          handler: handleClaimed
+      file: ./src/merkle_mint.ts
